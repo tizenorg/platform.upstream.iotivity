@@ -37,9 +37,21 @@ developing applications that use %{name}.
 %setup -q -n %{name}-%{version}
 
 %build
-%ifarch %arm
+export RPM_ARCH=x86
+
+%ifarch armv7l
 export RPM_ARCH=armeabi-v7a
-%else
+%endif
+
+%ifarch aarch64
+export RPM_ARCH=arm64
+%endif
+
+%ifarch x86_64
+export RPM_ARCH=x86_64
+%endif
+
+%ifarch i386
 export RPM_ARCH=x86
 %endif
 
