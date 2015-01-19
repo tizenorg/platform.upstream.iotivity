@@ -40,7 +40,15 @@ developing applications that use %{name}.
 %ifarch %arm
 export RPM_ARCH=armeabi-v7a
 %else
+%ifarch aarch64
+export RPM_ARCH=arm64
+%else
+%ifarch i586 i686 %{ix86}
 export RPM_ARCH=x86
+%else
+export RPM_ARCH=%{_arch}
+%endif
+%endif
 %endif
 
 scons -j 4 TARGET_OS=tizen TARGET_ARCH=$RPM_ARCH RELEASE=%{release_mode}
