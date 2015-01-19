@@ -37,10 +37,16 @@ developing applications that use %{name}.
 %setup -q -n %{name}-%{version}
 
 %build
-%ifarch %arm
+%ifarch %armv7l
 export RPM_ARCH=armeabi-v7a
-%else
+%else if %aarch64
+export RPM_ARCH=arm64
+%else if %x86_64
+export RPM_ARCH=x86_64
+%else if %i386
 export RPM_ARCH=x86
+%else
+export RPM_ARCH=%{_arch}
 %endif
 
 scons -j 4 TARGET_OS=tizen TARGET_ARCH=$RPM_ARCH RELEASE=%{release_mode}
