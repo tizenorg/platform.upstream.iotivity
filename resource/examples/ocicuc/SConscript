@@ -20,7 +20,7 @@ ocicuc_env.AppendUnique(CPPPATH = [
 		])
 
 ocicuc_env.AppendUnique(LIBPATH = [env.get('BUILD_DIR')])
-ocicuc_env.PrependUnique(LIBS = ['oc', 'octbstack', 'coap', 'oc_logger'])
+ocicuc_env.PrependUnique(LIBS = ['oc', 'octbstack', 'coap', 'oc_logger', 'pthread'])
 
 target_os = env.get('TARGET_OS')
 if target_os not in ['windows', 'winrt']:
