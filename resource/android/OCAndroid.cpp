@@ -82,54 +82,23 @@ namespace std {
 		return ret;
 	}
 
-	#define TO_STRING(_t) { \
-		std::ostringstream os; \
-		os << _t; \
-		return os.str(); \
-	} \
-
-	std::string to_string(int val)
-	{
-		TO_STRING(val)
+	std::string to_string(int t) {
+		std::ostringstream os;
+			os << t;
+		return os.str();
 	}
 
-	std::string to_string(long val)
-	{
-		TO_STRING(val)
+	std::string to_string(double t) {
+		std::ostringstream os;
+			os << t;
+		return os.str();
 	}
 
-	std::string to_string(long long val)
+	std::string to_string(uint32_t t)
 	{
-		TO_STRING(val)
+		std::ostringstream os;
+			os << t;
+		return os.str();
 	}
 
-	std::string to_string(unsigned val)
-	{
-		TO_STRING(val)
-	}
-
-	std::string to_string(unsigned long val)
-	{
-		TO_STRING(val)
-	}
-
-	std::string to_string(unsigned long long val)
-	{
-		TO_STRING(val)
-	}
-
-	std::string to_string(float val)
-	{
-		TO_STRING(val)
-	}
-
-	std::string to_string(double val)
-	{
-		TO_STRING(val)
-	}
-
-	std::string to_string(long double val)
-	{
-		TO_STRING(val)
-	}
 } // std

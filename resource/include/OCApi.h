@@ -28,7 +28,7 @@
 #include <memory>
 #include <iterator>
 
-#include "octypes.h"
+#include "ocstack.h"
 #include "OCHeaderOption.h"
 #include <OCException.h>
 #include "StringConstants.h"
@@ -110,9 +110,9 @@ namespace OC
     *  ServiceType: indicate InProc or OutOfProc
     *  ModeType   : indicate whether we want to do server, client or both
     *  ipAddress  : ip address of server.
-    *               if you specify 0.0.0.0 : it listens on any interface.
+    *               if you speecifiy 0.0.0.0 : it listens on any interface.
     *  port       : port of server.
-    *             : if you specify 0 : next available random port is used.
+    *             : if you specifiy 0 : next available random port is used.
     *             : if you specify 5683 : client discovery can work even if they don't specify port.
     *  QoS        : Quality of Service : CONFIRMABLE or NON CONFIRMABLE.
     */
@@ -148,6 +148,7 @@ namespace OC
 
     enum RequestHandlerFlag
     {
+        InitFlag = 1 << 0,
         RequestFlag = 1 << 1,
         ObserverFlag = 1 << 2
     };
@@ -185,23 +186,21 @@ namespace OC
     // const strings for different interfaces
 
     // Default interface
-    const std::string DEFAULT_INTERFACE = "oic.if.baseline";
+    const std::string DEFAULT_INTERFACE = "oc.mi.def";
 
     // Used in discovering (GET) links to other resources of a collection.
-    const std::string LINK_INTERFACE = "oic.if.ll";
+    const std::string LINK_INTERFACE = "oc.mi.ll";
 
     // Used in GET, PUT, POST, DELETE methods on links to other resources of a collection.
-    const std::string BATCH_INTERFACE = "oic.if.b";
+    const std::string BATCH_INTERFACE = "oc.mi.b";
 
     // Used in GET, PUT, POST methods on links to other remote resources of a group.
-    const std::string GROUP_INTERFACE = "oc.mi.grp";
+    const std::string GROUP_INTERFACE = "oc.mi.c";
 
 
     typedef std::function<void(std::shared_ptr<OCResource>)> FindCallback;
 
     typedef std::function<void(const OCRepresentation&)> FindDeviceCallback;
-
-    typedef std::function<void(const OCRepresentation&)> FindPlatformCallback;
 
     typedef std::function<OCEntityHandlerResult(
                             const std::shared_ptr<OCResourceRequest>)> EntityHandler;

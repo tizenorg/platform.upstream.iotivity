@@ -30,7 +30,7 @@ void CContextDataReader::finalRelease()
     m_pContextModelAccessor = NULL;
 }
 
-SSMRESULT CContextDataReader::registerContextModelAccessor(IContextModelAccessor
+SSMRESULT CContextDataReader::registerContextModelAccessor(IN IContextModelAccessor
         *pContextModelAccessor)
 {
     m_pContextModelAccessor = pContextModelAccessor;
@@ -38,8 +38,8 @@ SSMRESULT CContextDataReader::registerContextModelAccessor(IContextModelAccessor
     return SSM_S_OK;
 }
 
-SSMRESULT CContextDataReader::getContextData(std::string modelName, int startIndex,
-        int count, std::vector<ContextData> *data, int *pLastIndex)
+SSMRESULT CContextDataReader::getContextData(IN std::string modelName, IN int startIndex,
+        IN int count, OUT std::vector<ContextData> *data, OUT int *pLastIndex)
 {
     SSMRESULT res = SSM_E_FAIL;
     std::vector<ModelPropertyVec>   modelDataSet;

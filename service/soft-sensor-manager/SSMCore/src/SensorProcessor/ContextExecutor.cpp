@@ -31,6 +31,8 @@ SSMRESULT CContextExecutor::finalConstruct()
 
     SSM_CLEANUP_ASSERT(m_pContextRepository->registerResourceFinderEvent(this));
 
+    SSM_CLEANUP_ASSERT(m_pContextRepository->startResourceFinder());
+
 CLEANUP:
     return res;
 }
@@ -146,7 +148,7 @@ void CContextExecutor::registerContext(TypeofEvent callType, ISSMResource *pSSMR
     }
 }
 
-void CContextExecutor::onExecute(void *pArg)
+void CContextExecutor::onExecute(IN void *pArg)
 {
     intptr_t         *pMessage = (intptr_t *)pArg;
 
@@ -187,7 +189,7 @@ void CContextExecutor::onExecute(void *pArg)
     }
 }
 
-void CContextExecutor::onTerminate(void *pArg)
+void CContextExecutor::onTerminate(IN void *pArg)
 {
     intptr_t         *pMessage = (intptr_t *)pArg;
 
@@ -292,8 +294,9 @@ int CContextExecutor::onEvent(std::string type, TypeofEvent callType,
             runLogic(inputData, softSensorName);
         }
     }
-    else if (m_registeredResources.find(type) != m_registeredResources.end()) //This data is primitive
+    else //This data is primitive
     {
+        //TODO: Temporally added for primitive data testing
         addOutput(ctxData);
     }
 
@@ -304,10 +307,6 @@ void  CContextExecutor::unregisterContext(TypeofEvent callType, ISSMResource *pS
         IEvent *pEvent)
 {
     std::vector<ISSMResource *> baseList;
-
-    //////////
-    ///TODO: Need to clean up m_mapResourceLookup list
-    //////////
 
     //This is primitive sensor
     if (pSSMResource->inputList.size() == 0)

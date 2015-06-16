@@ -20,30 +20,19 @@
 
 // OCClient.cpp : Defines the entry point for the console application.
 //
-#include <set>
 #include <string>
 #include <cstdlib>
 #include <pthread.h>
 #include <mutex>
 #include <condition_variable>
+
 #include "OCPlatform.h"
 #include "OCApi.h"
 
 using namespace OC;
 
-struct dereference_compare
-{
-    bool operator()(std::shared_ptr<OCResource> lhs, std::shared_ptr<OCResource> rhs )const
-    {
-        return *lhs < *rhs;
-    }
-};
-typedef std::set<std::shared_ptr<OCResource>, dereference_compare> DiscoveredResourceSet;
-
-DiscoveredResourceSet discoveredResources;
 const int SUCCESS_RESPONSE = 0;
 std::shared_ptr<OCResource> curResource;
-std::mutex resourceLock;
 static ObserveType OBSERVE_TYPE_TO_USE = ObserveType::Observe;
 
 class Light
@@ -73,20 +62,20 @@ void onObserve(const HeaderOptions headerOptions, const OCRepresentation& rep,
     if(eCode == SUCCESS_RESPONSE)
     {
         std::cout << "OBSERVE RESULT:"<<std::endl;
-        if(sequenceNumber == (int) ObserveAction::ObserveRegister)
+        if(sequenceNumber == 0)
         {
-            std::cout << "\tObserve Registration Confirmed: "<< std::endl;
+            std::cout << "\tObserve Registration Confirmed: "<< endl;
         }
-        else if (sequenceNumber == (int) ObserveAction::ObserveUnregister)
+        else if (sequenceNumber == 1)
         {
-            std::cout << "\tObserve Cancel Confirmed: "<< std::endl;
+            std::cout << "\tObserve Cancel Confirmed: "<< endl;
             sleep(10);
             std::cout << "DONE"<<std::endl;
             std::exit(0);
         }
         else
         {
-            std::cout << "\tSequenceNumber: "<< sequenceNumber << std::endl;
+            std::cout << "\tSequenceNumber: "<< sequenceNumber << endl;
         }
 
         rep.getValue("state", mylight.m_state);
@@ -97,7 +86,7 @@ void onObserve(const HeaderOptions headerOptions, const OCRepresentation& rep,
         std::cout << "\tpower: " << mylight.m_power << std::endl;
         std::cout << "\tname: " << mylight.m_name << std::endl;
 
-        if(observe_count() > 10)
+        if(observe_count() > 30)
         {
             std::cout<<"Cancelling Observe..."<<std::endl;
             OCStackResult result = curResource->cancelObserve(OC::QualityOfService::HighQos);
@@ -135,9 +124,9 @@ void onPost2(const HeaderOptions& headerOptions, const OCRepresentation& rep, co
         }
 
         if (OBSERVE_TYPE_TO_USE == ObserveType::Observe)
-            std::cout << std::endl << "Observe is used." << std::endl << std::endl;
+            std::cout << endl << "Observe is used." << endl << endl;
         else if (OBSERVE_TYPE_TO_USE == ObserveType::ObserveAll)
-            std::cout << std::endl << "ObserveAll is used." << std::endl << std::endl;
+            std::cout << endl << "ObserveAll is used." << endl << endl;
         sleep(1);
         curResource->observe(OBSERVE_TYPE_TO_USE, QueryParamsMap(), &onObserve,
                 OC::QualityOfService::HighQos);
@@ -296,6 +285,11 @@ void getLightRepresentation(std::shared_ptr<OCResource> resource)
 // Callback to found resources
 void foundResource(std::shared_ptr<OCResource> resource)
 {
+    if(curResource)
+    {
+        std::cout << "Found another resource, ignoring"<<std::endl;
+    }
+
     std::string resourceURI;
     std::string hostAddress;
     try
@@ -303,25 +297,6 @@ void foundResource(std::shared_ptr<OCResource> resource)
         // Do some operations with resource object.
         if(resource)
         {
-            std::lock_guard<std::mutex> lk(resourceLock);
-
-            if(discoveredResources.find(resource) == discoveredResources.end())
-            {
-                std::cout << "Found resource " << resource->uniqueIdentifier() <<
-                    " for the first time on server with ID: "<< resource->sid()<<std::endl;
-                discoveredResources.insert(resource);
-            }
-            else
-            {
-                std::cout<<"Found resource "<< resource->uniqueIdentifier() << " again!"<<std::endl;
-            }
-
-            if(curResource)
-            {
-                std::cout << "Found another resource, ignoring"<<std::endl;
-                return;
-            }
-
             std::cout<<"DISCOVERED Resource:"<<std::endl;
             // Get the resource URI
             resourceURI = resource->uri();
@@ -349,8 +324,7 @@ void foundResource(std::shared_ptr<OCResource> resource)
             {
                 curResource = resource;
                 sleep(1);
-                // Call a local function which will internally invoke get
-                // API on the resource pointer
+                // Call a local function which will internally invoke get API on the resource pointer
                 getLightRepresentation(resource);
             }
         }
@@ -363,53 +337,37 @@ void foundResource(std::shared_ptr<OCResource> resource)
     }
     catch(std::exception& e)
     {
-        std::cerr << "Exception in foundResource: "<< e.what() <<std::endl;
+        //log(e.what());
     }
 }
 
 void PrintUsage()
 {
     std::cout << std::endl;
-    std::cout << "Usage : simpleclientHQ <ObserveType>" << std::endl;
+    std::cout << "Usage : simpleclient <ObserveType>" << std::endl;
     std::cout << "   ObserveType : 1 - Observe" << std::endl;
     std::cout << "   ObserveType : 2 - ObserveAll" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
-
-    std::ostringstream requestURI;
-
-    try
+    if (argc == 1)
     {
-        if (argc == 1)
-        {
-            OBSERVE_TYPE_TO_USE = ObserveType::Observe;
-        }
-        else if (argc == 2)
-        {
-            int value = std::stoi(argv[1]);
-            if (value == 1)
-            {
-                OBSERVE_TYPE_TO_USE = ObserveType::Observe;
-            }
-            else if (value == 2)
-            {
-                OBSERVE_TYPE_TO_USE = ObserveType::ObserveAll;
-            }
-            else
-            {
-                OBSERVE_TYPE_TO_USE = ObserveType::Observe;
-            }
-        }
-        else
-        {
-            PrintUsage();
-            return -1;
-        }
+        OBSERVE_TYPE_TO_USE = ObserveType::Observe;
     }
-    catch(std::exception&)
+    else if (argc == 2)
     {
-        std::cout << "Invalid input argument. Using Observe as observe type" << std::endl;
+        int value = atoi(argv[1]);
+        if (value == 1)
+            OBSERVE_TYPE_TO_USE = ObserveType::Observe;
+        else if (value == 2)
+            OBSERVE_TYPE_TO_USE = ObserveType::ObserveAll;
+        else
+            OBSERVE_TYPE_TO_USE = ObserveType::Observe;
+    }
+    else
+    {
+        PrintUsage();
+        return -1;
     }
 
     // Create PlatformConfig object
@@ -418,7 +376,7 @@ int main(int argc, char* argv[]) {
         OC::ModeType::Client,
         "0.0.0.0",
         0,
-        OC::QualityOfService::HighQos
+        OC::QualityOfService::LowQos
     };
 
     OCPlatform::Configure(cfg);
@@ -426,18 +384,9 @@ int main(int argc, char* argv[]) {
     try
     {
         // Find all resources
-        requestURI << OC_MULTICAST_DISCOVERY_URI << "?rt=core.light";
-
-        OCPlatform::findResource("", requestURI.str(),
-                OC_ALL, &foundResource, OC::QualityOfService::LowQos);
+        OCPlatform::findResource("", "coap://224.0.1.187/oc/core?rt=core.light", &foundResource,
+                OC::QualityOfService::LowQos);
         std::cout<< "Finding Resource... " <<std::endl;
-
-        // Find resource is done twice so that we discover the original resources a second time.
-        // These resources will have the same uniqueidentifier (yet be different objects), so that
-        // we can verify/show the duplicate-checking code in foundResource(above);
-        OCPlatform::findResource("", requestURI.str(),
-                OC_ALL, &foundResource, OC::QualityOfService::LowQos);
-        std::cout<< "Finding Resource for second time... " <<std::endl;
 
         // A condition variable will free the mutex it is given, then do a non-
         // intensive block until 'notify' is called on it.  In this case, since we
@@ -448,13 +397,11 @@ int main(int argc, char* argv[]) {
         std::unique_lock<std::mutex> lock(blocker);
         cv.wait(lock);
 
-    }
-    catch(OCException& e)
+    }catch(OCException& e)
     {
-        oclog() << "Exception in main: "<<e.what();
+        //log(e.what());
     }
 
     return 0;
 }
-
 

@@ -67,7 +67,7 @@ class CConditionedQuery :
         * @exception
         * @see
         */
-        SSMRESULT create(IContextModel::ActivationType activationType, int totalConditionsCount);
+        SSMRESULT create(IN IContextModel::ActivationType activationType, IN int totalConditionsCount);
 
         /**
         * @fn     registerQueryConditionEvent
@@ -80,7 +80,7 @@ class CConditionedQuery :
         * @exception
         * @see
         */
-        SSMRESULT registerQueryConditionEvent(IConditionedQueryEvent *pConditionedQueryEvent);
+        SSMRESULT registerQueryConditionEvent(IN IConditionedQueryEvent *pConditionedQueryEvent);
 
         /**
         * @fn     onConditionedModelTriggered
@@ -93,11 +93,11 @@ class CConditionedQuery :
         * @exception
         * @see
         */
-        SSMRESULT onConditionedModelTriggered(int triggerId);
+        SSMRESULT onConditionedModelTriggered(IN int triggerId);
 
-        void onExecute(void *pArg);
+        void onExecute(IN void *pArg);
 
-        void onTerminate(void *pArg);
+        void onTerminate(IN void *pArg);
 
         SSMRESULT queryInterface(const OID &objectID, IBase **ppObject)
         {
@@ -126,7 +126,7 @@ class CConditionedQuery :
         * @exception
         * @see
         */
-        SSMRESULT registerConditionedModel(IConditionedModel *pConditionedModel);
+        SSMRESULT registerConditionedModel(IN IConditionedModel *pConditionedModel);
 
         /**
         * @fn     activateTriggers
@@ -139,7 +139,7 @@ class CConditionedQuery :
         * @exception
         * @see
         */
-        SSMRESULT activateTriggers(int userTriggerId);
+        SSMRESULT activateTriggers(IN int userTriggerId);
 
         /**
         * @fn     deactivateTriggers
@@ -165,7 +165,7 @@ class CConditionedQuery :
         * @exception
         * @see
         */
-        SSMRESULT getConditionedQueryResult(IConditionedQueryResult **ppConditionedQueryResult);
+        SSMRESULT getConditionedQueryResult(OUT IConditionedQueryResult **ppConditionedQueryResult);
 
         /**
         * @fn     hasAllConditionedModels

@@ -1,22 +1,3 @@
-/******************************************************************
- *
- * Copyright 2014 Samsung Electronics All Rights Reserved.
- *
- *
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- ******************************************************************/
 #include "SSMInterface.h"
 #include "SSMInterface/SSMCore.h"
 #include "Common/PlatformLayer.h"
@@ -28,7 +9,7 @@ class SSMCoreEventReceiver : public IQueryEngineEvent
         {
         }
 
-        SSMRESULT onQueryEngineEvent(int cqid, IDataReader *pResult)
+        SSMRESULT onQueryEngineEvent(IN int cqid, IN IDataReader *pResult)
         {
             SSMRESULT res = SSM_E_FAIL;
 
@@ -58,12 +39,12 @@ CLEANUP:
             m_mtxListener.unlock();
         }
 
-        void addListener(int cqid, IQueryEngineEvent *pEngineEvent)
+        void addListener(IN int cqid, IN IQueryEngineEvent *pEngineEvent)
         {
             m_mapListener[cqid] = pEngineEvent;
         }
 
-        void removeListener(int cqid)
+        void removeListener(IN int cqid)
         {
             m_mapListener.erase(cqid);
         }
@@ -76,12 +57,17 @@ CLEANUP:
 IQueryEngine                        *g_pQueryEngineInstance = NULL;
 SSMCoreEventReceiver                *g_pEventReceiver = NULL;
 
-SSMRESULT OIC::InitializeSSM(std::string xmlDescription)
+SSMInterface::SSMInterface()
 {
-    SSMRESULT res = SSM_E_FAIL;
+    std::string xmlDescription = "<SSMCore>"
+                                 "<Device>"
+                                 "<UDN>abcde123-31f8-11b4-a222-08002b34c003</UDN>"
+                                 "<Name>MyPC</Name>"
+                                 "<Type>PC</Type>"
+                                 "</Device>"
+                                 "</SSMCore>";
 
-    if (g_pQueryEngineInstance != NULL)
-        SSM_CLEANUP_ASSERT(SSM_E_INITIALIZED);
+    SSMRESULT res = SSM_E_FAIL;
 
     g_pEventReceiver = new SSMCoreEventReceiver();
     SSM_CLEANUP_NULL_ASSERT(g_pEventReceiver);
@@ -89,23 +75,13 @@ SSMRESULT OIC::InitializeSSM(std::string xmlDescription)
     SSM_CLEANUP_ASSERT(StartSSMCore());
     SSM_CLEANUP_ASSERT(CreateQueryEngine(&g_pQueryEngineInstance));
     SSM_CLEANUP_ASSERT(g_pQueryEngineInstance->registerQueryEvent(g_pEventReceiver));
-
 CLEANUP:
-    if (res != SSM_S_OK &&
-        res != SSM_E_INITIALIZED)
-    {
-        SAFE_DELETE(g_pEventReceiver);
-    }
-
-    return res;
+    ;
 }
 
-SSMRESULT OIC::TerminateSSM()
+SSMInterface::~SSMInterface()
 {
     SSMRESULT res = SSM_E_FAIL;
-
-    if (g_pQueryEngineInstance == NULL)
-        SSM_CLEANUP_ASSERT(SSM_E_NOTINIT);
 
     SSM_CLEANUP_ASSERT(g_pQueryEngineInstance->unregisterQueryEvent(g_pEventReceiver));
     ReleaseQueryEngine(g_pQueryEngineInstance);
@@ -115,40 +91,31 @@ SSMRESULT OIC::TerminateSSM()
 
 CLEANUP:
     SAFE_DELETE(g_pEventReceiver);
-    return res;
 }
 
-SSMRESULT OIC::RegisterQuery(std::string queryString, IQueryEngineEvent *listener,
-                             int &cqid)
+SSMRESULT SSMInterface::registerQuery(IN std::string queryString, IN IQueryEngineEvent *listener,
+                                      IN int &cqid)
 {
     SSMRESULT res = SSM_E_FAIL;
-
-    if (g_pQueryEngineInstance == NULL)
-        SSM_CLEANUP_ASSERT(SSM_E_NOTINIT);
 
     g_pEventReceiver->lockListener();
     SSM_CLEANUP_ASSERT(g_pQueryEngineInstance->executeContextQuery(queryString, &cqid));
     g_pEventReceiver->addListener(cqid, listener);
 
 CLEANUP:
-    if (g_pEventReceiver != NULL)
-        g_pEventReceiver->unlockListener();
+    g_pEventReceiver->unlockListener();
     return res;
 }
 
-SSMRESULT OIC::UnregisterQuery(int cqid)
+SSMRESULT SSMInterface::unregisterQuery(IN int cqid)
 {
     SSMRESULT res = SSM_E_FAIL;
-
-    if (g_pQueryEngineInstance == NULL)
-        SSM_CLEANUP_ASSERT(SSM_E_NOTINIT);
 
     g_pEventReceiver->lockListener();
     SSM_CLEANUP_ASSERT(g_pQueryEngineInstance->killContextQuery(cqid));
     g_pEventReceiver->removeListener(cqid);
 
 CLEANUP:
-    if (g_pEventReceiver != NULL)
-        g_pEventReceiver->unlockListener();
+    g_pEventReceiver->unlockListener();
     return res;
 }

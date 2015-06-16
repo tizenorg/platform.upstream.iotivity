@@ -53,7 +53,7 @@ std::string getQueryStrForGetPut(OCClientResponse * clientResponse);
 /* Following are initialization functions for GET, PUT
  * POST & Discovery operations
  */
-int InitPutRequest(OCQualityOfService qos);
+int InitPutRequest();
 int InitGetRequest(OCQualityOfService qos);
 int InitPostRequest(OCQualityOfService qos);
 int InitDiscovery();

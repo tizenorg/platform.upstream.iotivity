@@ -24,124 +24,78 @@
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 
 #define TAG "gen_sec_bin"
 
-//scratch buffer
-const int WORK_BUF_LEN = 512;
-
-const char SERVER_CRED_FILE[] = "server_cred.bin";
-const char CLIENT_CRED_FILE[] = "client_cred.bin";
-
-static void printStruct(const char * device, OCSecConfigData* s)
+void printStruct(const char * device, OCDtlsPskCredsBlob* s)
 {
-    if (device && s)
-    {
-        OC_LOG(INFO, TAG, device);
-        OC_LOG_V(INFO, TAG, "Version - %d", s->version);
-        OC_LOG_V(INFO, TAG, "Number of blobs - %d", s->numBlob);
+    OC_LOG(INFO, TAG, device);
+    OC_LOG_V(INFO, TAG, "Version - %d", s->blobVer);
+    OC_LOG(INFO, TAG, "My Identity :");
+    OC_LOG_BUFFER(INFO, TAG, s->identity, DTLS_PSK_ID_LEN);
 
-        OCSecBlob* osb = (OCSecBlob*)(s->blob);
-        OC_LOG_V(INFO, TAG, "Blob Type - %d", osb->type);
-        OC_LOG_V(INFO, TAG, "Blob Data Length - %d", osb->len);
-
-        OCDtlsPskCredsBlob* odpcb = (OCDtlsPskCredsBlob*)(osb->val);
-        OC_LOG(INFO, TAG, "My Identity :");
-        OC_LOG_BUFFER(INFO, TAG, odpcb->identity, DTLS_PSK_ID_LEN);
-
-        OC_LOG_V(INFO, TAG, "Number of trusted Peers  - %d", odpcb->num);
-        OC_LOG(INFO, TAG, "Peer Identity :");
-        OC_LOG_BUFFER(INFO, TAG, odpcb->creds[0].id, DTLS_PSK_ID_LEN);
-        OC_LOG(INFO, TAG, "Peer Psk :");
-        OC_LOG_BUFFER(INFO, TAG, odpcb->creds[0].psk, DTLS_PSK_PSK_LEN);
-    }
+    OC_LOG_V(INFO, TAG, "Number of trusted Peers  - %d", s->num);
+    OC_LOG(INFO, TAG, "Peer Identity :");
+    OC_LOG_BUFFER(INFO, TAG, s->creds[0].id, DTLS_PSK_ID_LEN);
+    OC_LOG(INFO, TAG, "Peer Psk :");
+    OC_LOG_BUFFER(INFO, TAG, s->creds[0].psk, DTLS_PSK_PSK_LEN);
 }
 
-
-static int SizeOfOCConfigData (OCSecConfigData *oscd)
-{
-    int len = 0;
-    if(oscd)
-    {
-        int i = 0;
-        OCSecBlob * osb;
-        len = len + sizeof(OCSecConfigData) - sizeof(uint8_t);
-
-        //go to first blob
-        osb = (OCSecBlob*)(oscd->blob);
-        for( i =0; i < oscd->numBlob; i++)
-        {
-            len += (sizeof(OCSecBlob) - sizeof(uint8_t) + osb->len);
-            osb = config_data_next_blob(osb);
-        }
-    }
-    return len;
-}
 
 int main()
 {
-    unsigned char buf_s[WORK_BUF_LEN];
-    unsigned char buf_c[WORK_BUF_LEN];
+    OCDtlsPskCredsBlob * s = NULL;
+    OCDtlsPskCredsBlob * c = NULL;
+    FILE* fps, *fpc;
+
+    int i;
 
     srand(time(NULL));
 
-    OCSecConfigData * oscd_s = (OCSecConfigData*)buf_s;
-    OCSecConfigData * oscd_c = (OCSecConfigData*)buf_c;
-    oscd_s->version = oscd_c->version = OCSecConfigVer_CurrentVersion;
+    s = (OCDtlsPskCredsBlob*) malloc(sizeof(OCDtlsPskCredsBlob));
+    c = (OCDtlsPskCredsBlob*) malloc(sizeof(OCDtlsPskCredsBlob));
 
-    //Only storing 1 blob of type 'OC_BLOB_TYPE_PSK'
-    oscd_s->numBlob = oscd_c->numBlob = 1;
+    memset(s, 0, sizeof(OCDtlsPskCredsBlob));
+    memset(c, 0, sizeof(OCDtlsPskCredsBlob));
 
-    OCSecBlob * osb_s = (OCSecBlob*)oscd_s->blob;
-    OCSecBlob * osb_c = (OCSecBlob*)oscd_c->blob;
-    osb_s->type = osb_c->type = OC_BLOB_TYPE_PSK;
-    //length of this blob will be the length to contain PSK credentials
-    // for '1' peer device
-    osb_s->len = osb_c->len = sizeof(OCDtlsPskCredsBlob);
+    s->blobVer = DtlsPskCredsBlobVer_CurrentVersion;
+    c->blobVer = DtlsPskCredsBlobVer_CurrentVersion;
 
-    OCDtlsPskCredsBlob * odpcb_s = (OCDtlsPskCredsBlob*)(osb_s->val);
-    OCDtlsPskCredsBlob * odpcb_c = (OCDtlsPskCredsBlob*)(osb_c->val);
+    s->num = c->num = 1;
 
-    odpcb_s->num = odpcb_c->num = 1;
-
-    for(int i = 0; i < DTLS_PSK_ID_LEN; i++)
+    for(i = 0; i < DTLS_PSK_ID_LEN; i++)
     {
-        odpcb_c->creds[0].id[i] = odpcb_s->identity[i] = rand() % (2^8);
+        c->creds[0].id[i] = s->identity[i] = rand() % (2^8);
 
-        odpcb_s->creds[0].id[i] = odpcb_c->identity[i] = rand() % (2^8);
+        s->creds[0].id[i] = c->identity[i] = rand() % (2^8);
 
-        odpcb_c->creds[0].psk[i] = odpcb_s->creds[0].psk[i] = rand() % (2^8);
+        c->creds[0].psk[i] = s->creds[0].psk[i] = rand() % (2^8);
     }
 
     // Print Credentials
-    printStruct("Server", oscd_s);
-    printStruct("Client", oscd_c);
+    printStruct("Server", s);
+    printStruct("Client", c);
 
     // Write to files
-    FILE* fps, *fpc;
     if ((fps = (FILE*) fopen("server_cred.bin", "wb")) != NULL)
     {
-        fwrite(oscd_s, SizeOfOCConfigData(oscd_s), 1, fps);
+        fwrite(s, sizeof(OCDtlsPskCredsBlob), 1, fps);
         fclose(fps);
     }
 
 
     if ((fpc = (FILE*) fopen("client_cred.bin", "wb")) != NULL)
     {
-        fwrite(oscd_c, SizeOfOCConfigData(oscd_c), 1, fpc);
+        fwrite(c, sizeof(OCDtlsPskCredsBlob), 1, fpc);
         fclose(fpc);
     }
 
-    struct stat st;
-    memset(buf_s, 0, sizeof(buf_s));
-    memset(buf_c, 0, sizeof(buf_c));
+    memset(s, 0, sizeof(OCDtlsPskCredsBlob));
+    memset(c, 0, sizeof(OCDtlsPskCredsBlob));
     // Read from files; print and verify manually
-    if ((fps = (FILE*) fopen(SERVER_CRED_FILE, "rb")) != NULL)
+    if ((fps = (FILE*) fopen("server_cred.bin", "rb")) != NULL)
     {
-        stat(SERVER_CRED_FILE, &st);
-        if ((sizeof(buf_s) < (unsigned int)st.st_size) ||
-            (fread(buf_s, 1, st.st_size, fps) != (unsigned int)st.st_size))
+        if (sizeof(OCDtlsPskCredsBlob) != fread(s, 1, sizeof(OCDtlsPskCredsBlob), fps))
         {
             OC_LOG(INFO, TAG, PCF("Reading from the file failed."));
         }
@@ -149,11 +103,9 @@ int main()
     }
 
 
-    if ((fpc = (FILE*) fopen(CLIENT_CRED_FILE, "rb")) != NULL)
+    if ((fpc = (FILE*) fopen("client_cred.bin", "rb")) != NULL)
     {
-        stat(CLIENT_CRED_FILE, &st);
-        if ((sizeof(buf_c) < (unsigned int)st.st_size) ||
-            (fread(buf_c, 1, st.st_size, fpc) != (unsigned int)st.st_size))
+        if (sizeof(OCDtlsPskCredsBlob) != fread(c, 1, sizeof(OCDtlsPskCredsBlob), fpc))
         {
             OC_LOG(INFO, TAG, PCF("Reading from the file failed."));
         }
@@ -162,10 +114,10 @@ int main()
 
     printf("\n\n");
     OC_LOG(INFO, TAG, PCF("Reading from file and printing again to verify manually"));
-    printStruct("Server", (OCSecConfigData*)buf_s);
-    printStruct("Client", (OCSecConfigData*)buf_c);
+    printStruct("Server", s);
+    printStruct("Client", c);
 
-    return 1;
+    free(s);
+    free(c);
 }
-
 

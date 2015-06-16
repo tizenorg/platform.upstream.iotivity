@@ -60,8 +60,8 @@ void CQueryEngine::finalRelease()
     m_mtxQueries.unlock();
 }
 
-SSMRESULT CQueryEngine::processQueryResult(int userTriggerId,
-        std::vector<result_model> *result)
+SSMRESULT CQueryEngine::processQueryResult(IN int userTriggerId,
+        IN std::vector<result_model> *result)
 {
     SSMRESULT           res = SSM_E_FAIL;
     ModelPropertyVec    modelData;
@@ -83,8 +83,10 @@ SSMRESULT CQueryEngine::processQueryResult(int userTriggerId,
     }
 
     m_contextQueries[userTriggerId]->check_result_model();
-    m_contextQueries[userTriggerId]->return_contextName(&contextName);
     m_contextQueries[userTriggerId]->return_modelID(&modelID);
+
+
+    m_contextQueries[userTriggerId]->return_contextName(&contextName);
 
     for (unsigned int i = 0; i < modelID.size(); i++)
     {
@@ -174,8 +176,8 @@ CLEANUP:
     return res;
 }
 
-SSMRESULT CQueryEngine::validateQueryResult(IConditionedQueryResult *pConditionedQueryResult,
-        std::vector<result_model> *resultData)
+SSMRESULT CQueryEngine::validateQueryResult(IN IConditionedQueryResult *pConditionedQueryResult,
+        OUT std::vector<result_model> *resultData)
 {
     SSMRESULT               res = SSM_E_FAIL;
     IContextModel           *pContextModel = NULL;
@@ -217,8 +219,8 @@ CLEANUP:
     return res;
 }
 
-SSMRESULT CQueryEngine::onConditionedQueryEvent(int userTriggerId,
-        IConditionedQueryResult *pConditionedQueryResult)
+SSMRESULT CQueryEngine::onConditionedQueryEvent(IN int userTriggerId,
+        IN IConditionedQueryResult *pConditionedQueryResult)
 {
     SSMRESULT                   res = SSM_E_FAIL;
     std::vector<result_model>   result;
@@ -261,12 +263,12 @@ void CQueryEngine::onTerminate(void *pArg)
     switch (pData[0])
     {
         case EVENT_TYPE_INNER:
-            pResult = (std::vector<result_model> *)pData[2];
+            pResult = (std::vector<result_model> *)(((int *)pArg)[2]);
             SAFE_DELETE(pResult);
             break;
 
         case EVENT_TYPE_OUTER:
-            pDataReader = (CDataReader *)pData[2];
+            pDataReader = (CDataReader *)(((int *)pArg)[2]);
             SAFE_DELETE(pDataReader);
             break;
 
@@ -276,7 +278,7 @@ void CQueryEngine::onTerminate(void *pArg)
     SAFE_ARRAY_DELETE(pData);
 }
 
-SSMRESULT CQueryEngine::executeContextQuery(std::string contextQuery, int *cqid)
+SSMRESULT CQueryEngine::executeContextQuery(IN std::string contextQuery, OUT int *cqid)
 {
     SSMRESULT               res = SSM_E_FAIL;
     IConditionedQuery       *pConditionedQuery = NULL;
@@ -287,14 +289,12 @@ SSMRESULT CQueryEngine::executeContextQuery(std::string contextQuery, int *cqid)
     CCQLParser              cqlParser;
     IContextModel::ActivationType   queryCommandType;
 
-    if (!cqlParser.parse(contextQuery, &token))
-    {
-        SSM_CLEANUP_ASSERT(SSM_E_FAIL);
-    }
+    cqlParser.parse(contextQuery, &token);
 
     if (!cqlParser.check_grammer(&token))
     {
-        SSM_CLEANUP_ASSERT(SSM_E_FAIL);
+        res = SSM_E_FAIL;
+        goto CLEANUP;
     }
 
     clsContextQuery = new CContextQuery();
@@ -370,13 +370,13 @@ CLEANUP:
 }
 
 //TODO: Registration with multiple instance support
-SSMRESULT CQueryEngine::registerQueryEvent(IQueryEngineEvent *pQueryEngineEvent)
+SSMRESULT CQueryEngine::registerQueryEvent(IN IQueryEngineEvent *pQueryEngineEvent)
 {
     m_pQueryEngineEvent = pQueryEngineEvent;
     return SSM_S_OK;
 }
 
-SSMRESULT CQueryEngine::unregisterQueryEvent(IQueryEngineEvent *pQueryEngineEvent)
+SSMRESULT CQueryEngine::unregisterQueryEvent(IN IQueryEngineEvent *pQueryEngineEvent)
 {
     if (m_pQueryEngineEvent == pQueryEngineEvent)
     {
@@ -387,7 +387,7 @@ SSMRESULT CQueryEngine::unregisterQueryEvent(IQueryEngineEvent *pQueryEngineEven
     return SSM_E_FAIL;
 }
 
-SSMRESULT CQueryEngine::killContextQuery(int cqid)
+SSMRESULT CQueryEngine::killContextQuery(IN int cqid)
 {
     SSMRESULT res = SSM_E_FAIL;
 

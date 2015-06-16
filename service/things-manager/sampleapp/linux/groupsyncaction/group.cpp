@@ -75,6 +75,7 @@ void onFindResource(std::shared_ptr< OCResource > resource)
 
 int main(int argc, char* argv[])
 {
+
     // Create PlatformConfig object
     PlatformConfig cfg
     { OC::ServiceType::InProc, OC::ModeType::Both/*OC::ModeType::Server*/, "0.0.0.0", 0,
@@ -112,20 +113,8 @@ int main(int argc, char* argv[])
             }
             else if (selectedMenu == 11)
             {
-                ostringstream query;
-                query << OC_MULTICAST_DISCOVERY_URI << "?rt=core.musicplayer";
-
-                cout << query.str() << endl;
                 result = OCPlatform::findResource("",
-                            query.str(),
-                            OC_ALL,
-                            onFindResource);
-
-                result = OCPlatform::findResource("",
-                            "coap://224.0.1.187/oc/core?rt=core.musicplayer",
-                            OC_ALL,
-                            onFindResource);
-
+                        "coap://224.0.1.187/oc/core?rt=core.musicplayer", onFindResource);
                 if (OC_STACK_OK == result)
                 {
                     cout << "Finding music player was successful\n";
@@ -137,13 +126,8 @@ int main(int argc, char* argv[])
             }
             else if (selectedMenu == 12)
             {
-                ostringstream query;
-                query << OC_MULTICAST_DISCOVERY_URI << "?rt=core.speaker";
-                result = OCPlatform::findResource("",
-                            query.str(),
-                            OC_ALL,
-                            onFindResource);
-
+                result = OCPlatform::findResource("", "coap://224.0.1.187/oc/core?rt=core.speaker",
+                        onFindResource);
                 if (OC_STACK_OK == result)
                 {
                     cout << "Finding speaker was successful\n";
@@ -176,9 +160,6 @@ int main(int argc, char* argv[])
                         break;
                     }
                 }
-
-                if(It == gResourceHandleList.end())
-                    continue;
 
                 gResourceHandleList.erase(It);
                 result = OCPlatform::unregisterResource(resourceHandle);
@@ -215,9 +196,6 @@ int main(int argc, char* argv[])
                     }
                 }
 
-                if(It == gResourceHandleList.end())
-                    continue;
-
                 gResourceHandleList.erase(It);
                 result = OCPlatform::unregisterResource(resourceHandle);
                 if (OC_STACK_OK == result)
@@ -237,7 +215,7 @@ int main(int argc, char* argv[])
     }
     catch (OCException& e)
     {
-        std::cout << "Exception: " << e.what() << std::endl;
+        //log(e.what());
     }
 
     return 0;

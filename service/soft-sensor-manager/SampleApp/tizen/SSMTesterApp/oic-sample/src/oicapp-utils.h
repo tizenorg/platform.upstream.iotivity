@@ -39,4 +39,3 @@ void oicapp_server_put(int power, int level);
 
 #endif //__OICAPP_UTILS_H__
 
-

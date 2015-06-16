@@ -45,11 +45,11 @@ class CEvaluationEngine :
         CSimpleMutex        m_mtxDataRelation;
         CObjectPtr<ITasker> m_pTasker;
 
-        SSMRESULT executeSQL_NoReturn(std::string strSQL);
+        SSMRESULT executeSQL_NoReturn(IN std::string strSQL);
 
-        SSMRESULT executeSQL_IntReturn(std::string strSQL, int *pResult);
+        SSMRESULT executeSQL_IntReturn(IN std::string strSQL, OUT int *pResult);
 
-        static void onSQLTrigger(sqlite3_context *context, int argc, sqlite3_value **argv);
+        static void onSQLTrigger(IN sqlite3_context *context, IN int argc, IN sqlite3_value **argv);
 
         SSMRESULT initializeEngine();
 
@@ -60,9 +60,9 @@ class CEvaluationEngine :
 
         void finalRelease();
 
-        void onExecute(void *pArg);
+        void onExecute(IN void *pArg);
 
-        void onTerminate(void *pArg);
+        void onTerminate(IN void *pArg);
 
         /**
         * @fn     onWatcherTriggered
@@ -76,7 +76,7 @@ class CEvaluationEngine :
         * @exception
         * @see
         */
-        SSMRESULT onWatcherTriggered(int triggerId, int dataId);
+        SSMRESULT onWatcherTriggered(IN int triggerId, IN int dataId);
 
         SSMRESULT queryInterface(const OID &objectID, IBase **ppObject)
         {
@@ -108,8 +108,8 @@ class CEvaluationEngine :
         * @exception
         * @see
         */
-        SSMRESULT createModel(int parentModelId, const char *newModelName,
-                              ModelPropertyVec *pModelDescs, int *pModelId);
+        SSMRESULT createModel(IN int parentModelId, IN const char *newModelName,
+                              IN ModelPropertyVec *pModelDescs, OUT int *pModelId);
 
         /**
         * @fn     addModelData
@@ -126,8 +126,8 @@ class CEvaluationEngine :
         * @exception
         * @see
         */
-        SSMRESULT addModelData(int modelId, int parentModelId, int parentDataId,
-                               ModelPropertyVec *pModelValues, int *pDataId);
+        SSMRESULT addModelData(IN int modelId, IN int parentModelId, IN int parentDataId,
+                               IN ModelPropertyVec *pModelValues, OUT int *pDataId);
 
         /**
         * @fn     updateModelData
@@ -142,9 +142,9 @@ class CEvaluationEngine :
         * @exception
         * @see
         */
-        SSMRESULT updateModelData(int modelId, int dataId, ModelPropertyVec *pModelValues);
+        SSMRESULT updateModelData(IN int modelId, IN int dataId, IN ModelPropertyVec *pModelValues);
 
-        //SSMRESULT DeleteModel(int modelId);
+        //SSMRESULT DeleteModel(IN int modelId);
 
         /**
         * @fn     deleteModelData
@@ -158,7 +158,7 @@ class CEvaluationEngine :
         * @exception
         * @see
         */
-        SSMRESULT deleteModelData(int modelId, int dataId);
+        SSMRESULT deleteModelData(IN int modelId, IN int dataId);
 
         /**
         * @fn     getModelData
@@ -173,7 +173,7 @@ class CEvaluationEngine :
         * @exception
         * @see
         */
-        SSMRESULT getModelData(int modelId, int dataId, ModelPropertyVec *pModelProperties);
+        SSMRESULT getModelData(IN int modelId, IN int dataId, OUT ModelPropertyVec *pModelProperties);
 
         /**
         * @fn     getModelDataSet
@@ -190,10 +190,10 @@ class CEvaluationEngine :
         * @exception
         * @see
         */
-        SSMRESULT getModelDataSet(int modelId, int startIndex, int count,
-                                  std::vector<ModelPropertyVec> *pDataSet, int *pLastIndex);
+        SSMRESULT getModelDataSet(IN int modelId, IN int startIndex, IN int count,
+                                  OUT std::vector<ModelPropertyVec> *pDataSet, OUT int *pLastIndex);
 
-        //SSMRESULT GetModelSchema(int modelId, ModelPropertyVec *pModelProperties);
+        //SSMRESULT GetModelSchema(IN int modelId, OUT ModelPropertyVec *pModelProperties);
 
         /**
         * @fn     getConditionedModelData
@@ -208,8 +208,8 @@ class CEvaluationEngine :
         * @exception
         * @see
         */
-        SSMRESULT getConditionedModelData(int modelId, ModelConditionVec *pModelConditions,
-                                          IntVec *pDataIds);
+        SSMRESULT getConditionedModelData(IN int modelId, IN ModelConditionVec *pModelConditions,
+                                          OUT IntVec *pDataIds);
 
         /**
         * @fn     watchModelData
@@ -225,8 +225,8 @@ class CEvaluationEngine :
         * @exception
         * @see
         */
-        SSMRESULT watchModelData(int modelId, ModelConditionVec *pModelConditions,
-                                 IEvaluationEngineEvent *pEvaluationEngineEvent, int *pTriggerId);
+        SSMRESULT watchModelData(IN int modelId, IN ModelConditionVec *pModelConditions,
+                                 IN IEvaluationEngineEvent *pEvaluationEngineEvent, OUT int *pTriggerId);
 
         /**
         * @fn     dropWatchModelData
@@ -239,7 +239,7 @@ class CEvaluationEngine :
         * @exception
         * @see
         */
-        SSMRESULT dropWatchModelData(int triggerId);
+        SSMRESULT dropWatchModelData(IN int triggerId);
 
         /**
         * @fn     getParentDataId
@@ -255,8 +255,8 @@ class CEvaluationEngine :
         * @exception
         * @see
         */
-        SSMRESULT getParentDataId(int modelId, int dataId, int parentModelId,
-                                  int *pParentDataId);
+        SSMRESULT getParentDataId(IN int modelId, IN int dataId, IN int parentModelId,
+                                  OUT int *pParentDataId);
 
         /**
         * @fn     getChildDataId
@@ -272,16 +272,16 @@ class CEvaluationEngine :
         * @exception
         * @see
         */
-        SSMRESULT getChildDataId(int modelId, int dataId, int childModelId,
-                                 IntVec *pChildDataIds);
+        SSMRESULT getChildDataId(IN int modelId, IN int dataId, IN int childModelId,
+                                 OUT IntVec *pChildDataIds);
 
-        //SSMRESULT GetPathToRoot(int currentModelId, IntVec *pPath);
+        //SSMRESULT GetPathToRoot(IN int currentModelId, OUT IntVec *pPath);
 
-        //SSMRESULT GetModelId(const char *modelName, int *pModelId);
+        //SSMRESULT GetModelId(IN const char *modelName, OUT int *pModelId);
 
-        //SSMRESULT GetModelHierarchy(int rootModelId, StringVec *pPath);
+        //SSMRESULT GetModelHierarchy(IN int rootModelId, OUT StringVec *pPath);
 
-        //SSMRESULT GetDataHierarchy(int rootModelId, int dataId, StringVec *pPath);
+        //SSMRESULT GetDataHierarchy(IN int rootModelId, IN int dataId, OUT StringVec *pPath);
 };
 
 #endif

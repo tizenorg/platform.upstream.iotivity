@@ -89,7 +89,7 @@ class IContextRepository : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT getSoftSensorList(std::vector<ISSMResource *> *pSoftSensorList) = 0 ;
+        virtual SSMRESULT getSoftSensorList(OUT std::vector<ISSMResource *> *pSoftSensorList) = 0 ;
 
         /**
         * @fn           getPrimitiveSensorList
@@ -109,7 +109,7 @@ class IContextRepository : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT getPrimitiveSensorList(std::vector<ISSMResource *> *pPrimitiveSensorList) = 0
+        virtual SSMRESULT getPrimitiveSensorList(OUT std::vector<ISSMResource *> *pPrimitiveSensorList) = 0
                 ;
 
         /**
@@ -126,21 +126,20 @@ class IContextRepository : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT initRepository(std::string name, std::string type,
-                                         std::string pathSoftSensors, std::string pathDescription) = 0;
+        virtual SSMRESULT initRepository(IN std::string name, IN std::string type,
+                                         IN std::string pathSoftSensors, IN std::string pathDescription) = 0;
 
-        virtual SSMRESULT registerResourceFinderEvent(IResourceEvent *pResourceEvent) = 0;
+        virtual SSMRESULT registerResourceFinderEvent(IN IResourceEvent *pResourceEvent) = 0;
         virtual SSMRESULT startResourceFinder() = 0;
-        virtual SSMRESULT stopResourceFinder() = 0;
-        virtual SSMRESULT onResourceFound(ISSMResource *pSensor) = 0;
-        virtual SSMRESULT onResourceLost(ISSMResource *pSensor) = 0;
+        virtual SSMRESULT onResourceFound(IN ISSMResource *pSensor) = 0;
+        virtual SSMRESULT onResourceLost(IN ISSMResource *pSensor) = 0;
 
-        virtual SSMRESULT startObserveResource(ISSMResource *pSensor, IEvent *pEvent) = 0;
-        virtual SSMRESULT stopObserveResource(ISSMResource *pSensor) = 0;
+        virtual SSMRESULT startObserveResource(IN ISSMResource *pSensor, IN IEvent *pEvent) = 0;
+        virtual SSMRESULT stopObserveResource(IN ISSMResource *pSensor) = 0;
 
-        virtual SSMRESULT loadSoftSensor(std::string softSensorName, ICtxDelegate *pDelegate,
-                                         void **hSoftSensor) = 0;
-        virtual SSMRESULT unloadSoftSensor(void *hSoftSensor) = 0;
+        virtual SSMRESULT loadSoftSensor(IN std::string softSensorName, IN ICtxDelegate *pDelegate,
+                                         OUT void **hSoftSensor) = 0;
+        virtual SSMRESULT unloadSoftSensor(IN void *hSoftSensor) = 0;
 };
 
 struct ModelProperty
@@ -184,7 +183,7 @@ class IEvaluationEngineEvent : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT onWatchModelData(int triggerId, int dataId) = 0;
+        virtual SSMRESULT onWatchModelData(IN int triggerId, IN int dataId) = 0;
 };
 
 static const OID OID_IEvaluationEngine = { 0x5a59a9f3, 0x7506, 0x4a3a, { 0xb9, 0x34, 0xcb, 0x51, 0xd, 0xb4, 0xed, 0x53 } };
@@ -238,9 +237,9 @@ class IEvaluationEngine : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT createModel(int parentModelId, const char *newModelName,
-                                      ModelPropertyVec *pModelDescs, int *pModelId) = 0;
-        //virtual SSMRESULT GetModelSchema(int modelId, ModelPropertyVec *pModelProperties) = 0;
+        virtual SSMRESULT createModel(IN int parentModelId, IN const char *newModelName,
+                                      IN ModelPropertyVec *pModelDescs, OUT int *pModelId) = 0;
+        //virtual SSMRESULT GetModelSchema(IN int modelId, OUT ModelPropertyVec *pModelProperties) = 0;
 
         /**
         * @fn     addModelData
@@ -257,8 +256,8 @@ class IEvaluationEngine : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT addModelData(int modelId, int parentModelId, int parentDataId,
-                                       ModelPropertyVec *pModelValues, int *pDataId) = 0;
+        virtual SSMRESULT addModelData(IN int modelId, IN int parentModelId, IN int parentDataId,
+                                       IN ModelPropertyVec *pModelValues, OUT int *pDataId) = 0;
 
         /**
         * @fn     updateModelData
@@ -273,10 +272,10 @@ class IEvaluationEngine : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT updateModelData(int modelId, int dataId,
-                                          ModelPropertyVec *pModelValues) = 0;
+        virtual SSMRESULT updateModelData(IN int modelId, IN int dataId,
+                                          IN ModelPropertyVec *pModelValues) = 0;
 
-        //virtual SSMRESULT DeleteModel(int modelId) = 0;
+        //virtual SSMRESULT DeleteModel(IN int modelId) = 0;
 
         /**
         * @fn     deleteModelData
@@ -290,9 +289,9 @@ class IEvaluationEngine : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT deleteModelData(int modelId, int dataId) = 0;
+        virtual SSMRESULT deleteModelData(IN int modelId, IN int dataId) = 0;
 
-        //virtual SSMRESULT GetModelId(const char *modelName, int *pModelId) = 0;
+        //virtual SSMRESULT GetModelId(IN const char *modelName, OUT int *pModelId) = 0;
 
         /**
         * @fn     getModelData
@@ -307,8 +306,8 @@ class IEvaluationEngine : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT getModelData(int modelId, int dataId,
-                                       ModelPropertyVec *pModelProperties) = 0;
+        virtual SSMRESULT getModelData(IN int modelId, IN int dataId,
+                                       OUT ModelPropertyVec *pModelProperties) = 0;
 
         /**
         * @fn     getModelDataSet
@@ -325,8 +324,8 @@ class IEvaluationEngine : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT getModelDataSet(int modelId, int startIndex, int count,
-                                          std::vector<ModelPropertyVec> *pDataSet, int *pLastIndex) = 0;
+        virtual SSMRESULT getModelDataSet(IN int modelId, IN int startIndex, IN int count,
+                                          OUT std::vector<ModelPropertyVec> *pDataSet, OUT int *pLastIndex) = 0;
 
         /**
         * @fn     getConditionedModelData
@@ -341,8 +340,8 @@ class IEvaluationEngine : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT getConditionedModelData(int modelId, ModelConditionVec *pModelConditions,
-                IntVec *pDataIds) = 0;
+        virtual SSMRESULT getConditionedModelData(IN int modelId, IN ModelConditionVec *pModelConditions,
+                OUT IntVec *pDataIds) = 0;
 
         /**
         * @fn     watchModelData
@@ -358,8 +357,8 @@ class IEvaluationEngine : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT watchModelData(int modelId, ModelConditionVec *pModelConditions,
-                                         IEvaluationEngineEvent *pEvaluationEngineEvent, int *pTriggerId) = 0;
+        virtual SSMRESULT watchModelData(IN int modelId, IN ModelConditionVec *pModelConditions,
+                                         IN IEvaluationEngineEvent *pEvaluationEngineEvent, OUT int *pTriggerId) = 0;
 
         /**
         * @fn     dropWatchModelData
@@ -372,7 +371,7 @@ class IEvaluationEngine : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT dropWatchModelData(int triggerId) = 0;
+        virtual SSMRESULT dropWatchModelData(IN int triggerId) = 0;
 
         /**
         * @fn     getParentDataId
@@ -388,8 +387,8 @@ class IEvaluationEngine : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT getParentDataId(int modelId, int dataId, int parentModelId,
-                                          int *pParentDataId) = 0;
+        virtual SSMRESULT getParentDataId(IN int modelId, IN int dataId, IN int parentModelId,
+                                          OUT int *pParentDataId) = 0;
 
         /**
         * @fn     getChildDataId
@@ -405,13 +404,13 @@ class IEvaluationEngine : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT getChildDataId(int modelId, int dataId, int childModelId,
-                                         IntVec *pChildDataIds) = 0;
+        virtual SSMRESULT getChildDataId(IN int modelId, IN int dataId, IN int childModelId,
+                                         OUT IntVec *pChildDataIds) = 0;
 
         //For decision tree
-        //virtual SSMRESULT GetPathToRoot(int currentModelId, IntVec *pPath) = 0;
-        //virtual SSMRESULT GetModelHierarchy(int rootModelId, StringVec *pPath) = 0;
-        //virtual SSMRESULT GetDataHierarchy(int rootModelId, int dataId, StringVec *pPath) = 0;
+        //virtual SSMRESULT GetPathToRoot(IN int currentModelId, OUT IntVec *pPath) = 0;
+        //virtual SSMRESULT GetModelHierarchy(IN int rootModelId, OUT StringVec *pPath) = 0;
+        //virtual SSMRESULT GetDataHierarchy(IN int rootModelId, IN int dataId, OUT StringVec *pPath) = 0;
 };
 
 /**
@@ -435,7 +434,7 @@ class IConditionedModelEvent
         * @exception
         * @see
         */
-        virtual SSMRESULT onConditionedModelTriggered(int triggerId) = 0;
+        virtual SSMRESULT onConditionedModelTriggered(IN int triggerId) = 0;
         virtual ~IConditionedModelEvent() {};
 };
 
@@ -463,7 +462,7 @@ class IConditionedModel : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT getBaseContextModel(IContextModel **ppBaseContextModel) = 0;
+        virtual SSMRESULT getBaseContextModel(OUT IContextModel **ppBaseContextModel) = 0;
 
         /**
         * @fn     registerConditionedModelEvent
@@ -476,7 +475,7 @@ class IConditionedModel : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT registerConditionedModelEvent(IConditionedModelEvent *pConditionedModelEvent) =
+        virtual SSMRESULT registerConditionedModelEvent(IN IConditionedModelEvent *pConditionedModelEvent) =
             0;
 
         /**
@@ -490,7 +489,7 @@ class IConditionedModel : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT activateTrigger(int *pTriggerId) = 0;
+        virtual SSMRESULT activateTrigger(OUT int *pTriggerId) = 0;
 
         /**
         * @fn     deactivateTrigger
@@ -529,7 +528,7 @@ class IConditionedModel : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT getAffectedData(IntVec *pDataIds) = 0;
+        virtual SSMRESULT getAffectedData(OUT IntVec *pDataIds) = 0;
 
         /**
         * @fn     getWatchCondition
@@ -542,7 +541,7 @@ class IConditionedModel : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT getWatchCondition(ModelConditionVec *pModelConditions) = 0;
+        virtual SSMRESULT getWatchCondition(OUT ModelConditionVec *pModelConditions) = 0;
 };
 
 static const OID OID_IConditionedQueryResult = { 0x4a24e85b, 0x8903, 0x4cf5, { 0x88, 0x7b, 0x65, 0xc2, 0xc3, 0x9e, 0x42, 0xfd } };
@@ -581,8 +580,8 @@ class IConditionedQueryResult : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT getConditionedContextModel(unsigned int conditionedModelIndex,
-                IConditionedModel **ppConditionedModel) = 0;
+        virtual SSMRESULT getConditionedContextModel(IN unsigned int conditionedModelIndex,
+                OUT IConditionedModel **ppConditionedModel) = 0;
 };
 
 /**
@@ -606,8 +605,8 @@ class IConditionedQueryEvent
         * @exception
         * @see
         */
-        virtual SSMRESULT onConditionedQueryEvent(int userTriggerId,
-                IConditionedQueryResult *pConditionedQueryResult) = 0;
+        virtual SSMRESULT onConditionedQueryEvent(IN int userTriggerId,
+                IN IConditionedQueryResult *pConditionedQueryResult) = 0;
         virtual ~IConditionedQueryEvent() {};
 };
 
@@ -633,7 +632,7 @@ class IConditionedQuery : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT registerConditionedModel(IConditionedModel *pConditionedModel) = 0;
+        virtual SSMRESULT registerConditionedModel(IN IConditionedModel *pConditionedModel) = 0;
 
         /**
         * @fn     activateTriggers
@@ -646,7 +645,7 @@ class IConditionedQuery : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT activateTriggers(int userTriggerId) = 0;
+        virtual SSMRESULT activateTriggers(IN int userTriggerId) = 0;
 
         /**
         * @fn     deactivateTriggers
@@ -672,7 +671,7 @@ class IConditionedQuery : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT getConditionedQueryResult(IConditionedQueryResult **ppConditionedQueryResult)
+        virtual SSMRESULT getConditionedQueryResult(OUT IConditionedQueryResult **ppConditionedQueryResult)
             = 0;
 
         /**
@@ -756,8 +755,8 @@ class IContextModel : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT getParentDataId(int dataId, IContextModel *pParentModel,
-                                          int *pParentDataId) = 0;
+        virtual SSMRESULT getParentDataId(IN int dataId, IN IContextModel *pParentModel,
+                                          OUT int *pParentDataId) = 0;
 
         /**
         * @fn     getChildDataId
@@ -772,8 +771,8 @@ class IContextModel : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT getChildDataId(int dataId, IContextModel *pChildModel,
-                                         IntVec *pPath) = 0;
+        virtual SSMRESULT getChildDataId(IN int dataId, IN IContextModel *pChildModel,
+                                         OUT IntVec *pPath) = 0;
 
         /**
         * @fn     activate
@@ -787,7 +786,7 @@ class IContextModel : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT activate(ActivationType activationType, int targetDeviceDataId) = 0;
+        virtual SSMRESULT activate(IN ActivationType activationType, IN int targetDeviceDataId) = 0;
 
         /**
         * @fn     deactivate
@@ -802,8 +801,8 @@ class IContextModel : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT deactivate(ActivationType activationType, int targetDeviceDataId) = 0;
-        //virtual SSMRESULT GetModelSchema(ModelPropertyVec *pModelProperties) = 0;
+        virtual SSMRESULT deactivate(IN ActivationType activationType, IN int targetDeviceDataId) = 0;
+        //virtual SSMRESULT GetModelSchema(OUT ModelPropertyVec *pModelProperties) = 0;
 
         /**
         * @fn     addModelData
@@ -818,8 +817,8 @@ class IContextModel : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT addModelData(int parentDataId, ModelPropertyVec *pData,
-                                       int *pDataId) = 0;
+        virtual SSMRESULT addModelData(IN int parentDataId, IN ModelPropertyVec *pData,
+                                       OUT int *pDataId) = 0;
 
         /**
         * @fn     updateModelData
@@ -833,7 +832,7 @@ class IContextModel : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT updateModelData(int dataId, ModelPropertyVec *pData) = 0;
+        virtual SSMRESULT updateModelData(IN int dataId, IN ModelPropertyVec *pData) = 0;
 
         /**
         * @fn     deleteModelData
@@ -846,7 +845,7 @@ class IContextModel : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT deleteModelData(int dataId) = 0;
+        virtual SSMRESULT deleteModelData(IN int dataId) = 0;
 
         /**
         * @fn     getModelData
@@ -860,7 +859,7 @@ class IContextModel : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT getModelData(int dataId, ModelPropertyVec *pData) = 0;
+        virtual SSMRESULT getModelData(IN int dataId, OUT ModelPropertyVec *pData) = 0;
 
         /**
         * @fn     getModelDataSet
@@ -876,8 +875,8 @@ class IContextModel : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT getModelDataSet(int startIndex, int count,
-                                          std::vector<ModelPropertyVec> *pDataSet, int *pLastIndex) = 0;
+        virtual SSMRESULT getModelDataSet(IN int startIndex, IN int count,
+                                          OUT std::vector<ModelPropertyVec> *pDataSet, OUT int *pLastIndex) = 0;
 
         /**
         * @fn     createConditionedModel
@@ -891,8 +890,8 @@ class IContextModel : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT createConditionedModel(ModelConditionVec *pModelConditionVec,
-                IConditionedModel **ppConditionedModel) = 0;
+        virtual SSMRESULT createConditionedModel(IN ModelConditionVec *pModelConditionVec,
+                OUT IConditionedModel **ppConditionedModel) = 0;
         //virtual SSMRESULT CleanUpModelData() = 0;
 
         /**
@@ -940,8 +939,8 @@ class IContextModelEvent
         * @exception
         * @see
         */
-        virtual SSMRESULT onModelStatusChange(IContextModel::Status newStatus,
-                                              ISSMResource *pSSMResource, IContextModel *pModel) = 0;
+        virtual SSMRESULT onModelStatusChange(IN IContextModel::Status newStatus,
+                                              IN ISSMResource *pSSMResource, IN IContextModel *pModel) = 0;
         virtual ~IContextModelEvent() {}
 };
 
@@ -967,8 +966,8 @@ class IContextModelAccessor
         * @exception
         * @see
         */
-        virtual SSMRESULT onQueryContextModel(std::string modelName,
-                                              IContextModel **ppContextModel) = 0;
+        virtual SSMRESULT onQueryContextModel(IN std::string modelName,
+                                              OUT IContextModel **ppContextModel) = 0;
         virtual ~IContextModelAccessor() {}
 };
 
@@ -994,7 +993,7 @@ class IContextDataReader : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT registerContextModelAccessor(IContextModelAccessor *pContextModelAccessor) = 0;
+        virtual SSMRESULT registerContextModelAccessor(IN IContextModelAccessor *pContextModelAccessor) = 0;
 
         /**
         * @fn     getContextData
@@ -1011,8 +1010,8 @@ class IContextDataReader : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT getContextData(std::string modelName, int startIndex, int count,
-                                         std::vector<ContextData> *data, int *pLastIndex) = 0;
+        virtual SSMRESULT getContextData(IN std::string modelName, IN int startIndex, IN int count,
+                                         OUT std::vector<ContextData> *data, OUT int *pLastIndex) = 0;
 };
 
 typedef std::vector<std::pair<std::string, ModelConditionVec> > QueryCondition;
@@ -1040,8 +1039,8 @@ class IPropagationEngine : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT getContextModel(std:: string modelName,
-                                          IContextModel **ppContextModel) = 0;
+        virtual SSMRESULT getContextModel(IN std:: string modelName,
+                                          OUT IContextModel **ppContextModel) = 0;
 
         /**
         * @fn     createConditionedQuery
@@ -1057,9 +1056,9 @@ class IPropagationEngine : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT createConditionedQuery(IContextModel::ActivationType activationType,
-                QueryCondition *pQueryCondition,
-                IConditionedQueryEvent *pEvent, IConditionedQuery **ppConditionedQuery) = 0;
+        virtual SSMRESULT createConditionedQuery(IN IContextModel::ActivationType activationType,
+                IN QueryCondition *pQueryCondition,
+                IN IConditionedQueryEvent *pEvent, OUT IConditionedQuery **ppConditionedQuery) = 0;
 };
 
 static const OID OID_IQueryEngineInternal = { 0x6eabf1a9, 0xe884, 0x4562, { 0x8b, 0x90, 0x1e, 0xe8, 0xba, 0xbf, 0xbe, 0x1a } };
@@ -1185,8 +1184,8 @@ class ISensingEngine : public IBase
 class IResourceFinderEvent
 {
     public:
-        virtual SSMRESULT onResourceFound(ISSMResource *pSensor) = 0;
-        virtual SSMRESULT onResourceLost(ISSMResource *pSensor) = 0;
+        virtual SSMRESULT onResourceFound(IN ISSMResource *pSensor) = 0;
+        virtual SSMRESULT onResourceLost(IN ISSMResource *pSensor) = 0;
         virtual ~IResourceFinderEvent() {}
 };
 
@@ -1194,11 +1193,10 @@ static const OID OID_IResourceFinder = { 0x8f52a31f, 0x51d5, 0x462b, { 0xa9, 0x8
 class IResourceFinder : public IBase
 {
     public:
-        virtual SSMRESULT registerResourceFinderEvent(IResourceFinderEvent *pEvent) = 0;
+        virtual SSMRESULT registerResourceFinderEvent(IN IResourceFinderEvent *pEvent) = 0;
         virtual SSMRESULT startResourceFinder() = 0;
-        virtual SSMRESULT stopResourceFinder() = 0;
-        virtual SSMRESULT startObserveResource(ISSMResource *pSensor, IEvent *pEvent) = 0;
-        virtual SSMRESULT stopObserveResource(ISSMResource *pSensor) = 0;
+        virtual SSMRESULT startObserveResource(IN ISSMResource *pSensor, IN IEvent *pEvent) = 0;
+        virtual SSMRESULT stopObserveResource(IN ISSMResource *pSensor) = 0;
 };
 
 /**
@@ -1234,7 +1232,7 @@ class ISoftSensorManager : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT initializeCore(std::string xmlDescription) = 0;
+        virtual SSMRESULT initializeCore(IN std::string xmlDescription) = 0;
 
         /**
         * @fn startCore
@@ -1273,7 +1271,7 @@ class ISoftSensorManager : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT terminateCore(bool factoryResetFlag) = 0;
+        virtual SSMRESULT terminateCore(IN bool factoryResetFlag) = 0;
 
         /**
         * @fn createQueryEngine
@@ -1287,7 +1285,7 @@ class ISoftSensorManager : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT createQueryEngine(IQueryEngine **ppQueryEngine) = 0;
+        virtual SSMRESULT createQueryEngine(OUT IQueryEngine **ppQueryEngine) = 0;
 
         /**
         * @fn releaseQueryEngine
@@ -1299,7 +1297,7 @@ class ISoftSensorManager : public IBase
         * @exception
         * @see
         */
-        virtual unsigned long releaseQueryEngine(IQueryEngine *pQueryEngine) = 0;
+        virtual unsigned long releaseQueryEngine(IN IQueryEngine *pQueryEngine) = 0;
 
         /**
         * @fn getInstalledModelList
@@ -1312,6 +1310,6 @@ class ISoftSensorManager : public IBase
         * @exception
         * @see
         */
-        virtual SSMRESULT getInstalledModelList(std::vector<ISSMResource *> *pList) = 0;
+        virtual SSMRESULT getInstalledModelList(OUT std::vector<ISSMResource *> *pList) = 0;
 };
 #endif

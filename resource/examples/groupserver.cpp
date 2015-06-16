@@ -67,19 +67,20 @@ void foundResource(std::shared_ptr< OCResource > resource)
                     cout << "\tresource Error!" << endl;
                 }
             }
+
+            // p_platform.bindResource(resourceHandle, foundResourceHandle);
+
         }
     }
     catch (std::exception& e)
     {
-        std::cout << "Exception in foundResource:"<< e.what() << std::endl;
+        std::cout << "" << std::endl;
     }
 
 }
 
-int main(int argc, char* argv[])
+int main()
 {
-    ostringstream requestURI;
-
     PlatformConfig config
     { OC::ServiceType::InProc, ModeType::Both, "0.0.0.0", 0, OC::QualityOfService::LowQos };
 
@@ -100,44 +101,29 @@ int main(int argc, char* argv[])
 
         cout << "registerResource is called." << endl;
 
-        requestURI << OC_MULTICAST_DISCOVERY_URI << "?rt=core.light";
-
-        OCPlatform::findResource("", requestURI.str(),
-                                 OC_ALL, &foundResource);
-
+        OCPlatform::findResource("", "coap://224.0.1.187/oc/core?rt=core.light", &foundResource);
         OCPlatform::bindInterfaceToResource(resourceHandle, GROUP_INTERFACE);
         OCPlatform::bindInterfaceToResource(resourceHandle, DEFAULT_INTERFACE);
 
         int selectedMenu;
-        bool isRun = true;
-        while (isRun)
+        while (true)
         {
-            cout << endl << "0 :: Quit 1 :: UNREGISTER RESOURCES\n" << endl;
             std::cin >> selectedMenu;
 
-            switch(selectedMenu)
+            if (selectedMenu == 1)
             {
-            case 0:
-                isRun = false;
-                break;
-            case 1:
-                std::cout << "Unregistering resources" << std::endl;
                 for (unsigned int i = 0; i < resourceHandleVector.size(); ++i)
                 {
                     OCPlatform::unregisterResource(resourceHandleVector.at(i));
                 }
-                break;
-            default:
-                cout << "Invalid option" << endl;
             }
 
         }
     }
     catch (OCException& e)
     {
-        oclog() << "Exception in main: "<< e.what();
+
     }
 
     return 0;
 }
-

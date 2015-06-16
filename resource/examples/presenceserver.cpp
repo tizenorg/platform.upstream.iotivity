@@ -210,33 +210,29 @@ int main()
 
         // Invoke createResource function of class light.
         myLightResource.createResource();
-        std :: cout << "Creating first resource of type \"core.light\"" << std :: endl;
+        printf("Created first resource of type \"core.light\"");
 
-        std :: cout << "Will start creating/deleting resources for presence in 10 seconds.\n";
-
-        sleep(10);
-
-        std :: cout << "\nCreating the second resource of type \"core.light\"" <<  std :: endl;
-        sleep(1);
+        printf("\nEnter a key to create the second resource of type \"core.light\"\n");
+        getchar();
 
         myLightResource.createResource2();
 
-        std :: cout << "Stopping presence\n" << std :: endl;
-        sleep(1);
+        printf("\nEnter a key to stop the presence\n");
+        getchar();
         stopPresence();
 
-        std :: cout << "Restarting presence\n" << std :: endl;
-        sleep(1);
+        printf("\nEnter a key to restart the presence\n");
+        getchar();
 
         startPresence(30);
 
-        std :: cout << "Creating a third resource of type \"core.light\"\n" << std :: endl;
-        sleep(1);
+        printf("\nEnter a key to create the third resource of type \"core.light\"\n");
+        getchar();
 
         myLightResource.createResource3();
 
-        std :: cout << "Creating two non-operational resources.\"\n" << std :: endl;
-        sleep(1);
+        printf("\nEnter a key to create two non-operational resources.\"\n");
+        getchar();
 
         createPresenceResources();
 
@@ -249,9 +245,9 @@ int main()
         std::unique_lock<std::mutex> lock(blocker);
         cv.wait(lock);
     }
-    catch(OCException& e)
+    catch(OCException e)
     {
-        oclog() << "Exception in main: "<< e.what();
+        //log(e.what());
     }
 
     // No explicit call to stop the platform.
@@ -259,4 +255,3 @@ int main()
 
     return 0;
 }
-

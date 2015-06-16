@@ -33,8 +33,7 @@
 //-----------------------------------------------------------------------------
 
 /* Structure to represent a LED resource */
-typedef struct LEDRESOURCE
-{
+typedef struct LEDRESOURCE{
     OCResourceHandle handle;
     bool state;
     int power;
@@ -70,4 +69,3 @@ OCEntityHandlerCb (OCEntityHandlerFlag flag,
         OCEntityHandlerRequest *entityHandlerRequest);
 
 #endif
-

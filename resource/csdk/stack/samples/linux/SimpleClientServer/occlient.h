@@ -43,7 +43,6 @@
 typedef enum {
     TEST_DISCOVER_REQ = 1,
     TEST_GET_REQ_NON,
-    TEST_GET_REQ_NON_WITH_FILTERS,
     TEST_PUT_REQ_NON,
     TEST_POST_REQ_NON,
     TEST_DELETE_REQ_NON,
@@ -57,7 +56,6 @@ typedef enum {
     TEST_OBS_PRESENCE,
     TEST_OBS_PRESENCE_WITH_FILTER,
     TEST_OBS_PRESENCE_WITH_FILTERS,
-    TEST_OBS_MULTICAST_PRESENCE,
 #endif
     TEST_OBS_REQ_NON_CANCEL_IMM,
     TEST_GET_REQ_NON_WITH_VENDOR_HEADER_OPTIONS,
@@ -72,7 +70,6 @@ int InitPresence();
 //----------------------------------------------------------------------------
 // Function prototype
 //----------------------------------------------------------------------------
-std::string getConnectivityType (OCConnectivityType connType);
 
 /* call getResult in common.cpp to get the result in string format. */
 const char *getResult(OCStackResult result);
@@ -89,15 +86,15 @@ std::string getQueryStrForGetPut(OCClientResponse * clientResponse);
 /* Following are initialization functions for GET, Observe, PUT
  * POST, Delete & Discovery operations
  */
-int InitGetRequestToUnavailableResource(OCQualityOfService qos);
+int InitGetRequestToUnavailableResource();
 int InitObserveRequest(OCQualityOfService qos);
-int InitPutRequest(OCQualityOfService qos);
-int InitGetRequest(OCQualityOfService qos, uint8_t withVendorSpecificHeaderOptions, bool getWithQuery);
+int InitPutRequest();
+int InitGetRequest(OCQualityOfService qos, uint8_t withVendorSpecificHeaderOptions);
 int InitPostRequest(OCQualityOfService qos);
 int InitDeleteRequest(OCQualityOfService qos);
 int InitGetRequest(OCQualityOfService qos);
-int InitDeviceDiscovery(OCQualityOfService qos);
-int InitDiscovery(OCQualityOfService qos);
+int InitDeviceDiscovery();
+int InitDiscovery();
 
 /* Function to retrieve ip address, port no. of the server
  *  and query for the operations to be performed.
@@ -140,4 +137,3 @@ OCStackApplicationResult discoveryReqCB(void* ctx, OCDoHandle handle,
 
 
 #endif
-

@@ -28,6 +28,17 @@ using namespace OIC;
 
 #define IN
 #define OUT
+/*
+#if defined(WIN32) && defined(SSMCORE_WINDOWS_EXPORTS)
+#define INTERFACE_DECLSPEC    __declspec(dllexport)
+#elif defined(WIN32)
+#define INTERFACE_DECLSPEC    __declspec(dllimport)
+#pragma comment(lib, "SSMCore_Windows.lib")
+#else
+#define INTERFACE_DECLSPEC
+#endif
+*/
+#define INTERFACE_DECLSPEC
 
 /**
 * @class    IQueryEngine
@@ -52,7 +63,7 @@ class IQueryEngine
         * @exception
         * @see
         */
-        virtual SSMRESULT executeContextQuery(std::string contextQuery, int *cqid) = 0;
+        virtual SSMRESULT executeContextQuery(IN std::string contextQuery, OUT int *cqid) = 0;
 
         /**
         * @fn     registerQueryEvent
@@ -65,7 +76,7 @@ class IQueryEngine
         * @exception
         * @see
         */
-        virtual SSMRESULT registerQueryEvent(IQueryEngineEvent *pQueryEngineEvent) = 0;
+        virtual SSMRESULT registerQueryEvent(IN IQueryEngineEvent *pQueryEngineEvent) = 0;
 
         /**
         * @fn     unregisterQueryEvent
@@ -78,7 +89,7 @@ class IQueryEngine
         * @exception
         * @see
         */
-        virtual SSMRESULT unregisterQueryEvent(IQueryEngineEvent *pQueryEngineEvent) = 0;
+        virtual SSMRESULT unregisterQueryEvent(IN IQueryEngineEvent *pQueryEngineEvent) = 0;
 
         /**
         * @fn    killContextQuery
@@ -91,7 +102,7 @@ class IQueryEngine
         * @exception
         * @see
         */
-        virtual SSMRESULT killContextQuery(int cqid) = 0;
+        virtual SSMRESULT killContextQuery(IN int cqid) = 0;
     protected:
         virtual ~IQueryEngine() {};
 };
@@ -112,7 +123,7 @@ extern "C"
 * @exception
 * @see
 */
-INTERFACE_DECLSPEC SSMRESULT CreateQueryEngine(IQueryEngine **ppQueryEngine);
+INTERFACE_DECLSPEC SSMRESULT CreateQueryEngine(OUT IQueryEngine **ppQueryEngine);
 
 /**
 * @fn    ReleaseQueryEngine
@@ -125,7 +136,7 @@ INTERFACE_DECLSPEC SSMRESULT CreateQueryEngine(IQueryEngine **ppQueryEngine);
 * @exception
 * @see
 */
-INTERFACE_DECLSPEC unsigned long ReleaseQueryEngine(IQueryEngine *pQueryEngine);
+INTERFACE_DECLSPEC unsigned long ReleaseQueryEngine(IN IQueryEngine *pQueryEngine);
 
 
 /**
@@ -140,7 +151,7 @@ INTERFACE_DECLSPEC unsigned long ReleaseQueryEngine(IQueryEngine *pQueryEngine);
 * @exception
 * @see
 */
-INTERFACE_DECLSPEC SSMRESULT InitializeSSMCore(std::string xmlDescription);
+INTERFACE_DECLSPEC SSMRESULT InitializeSSMCore(IN std::string xmlDescription);
 
 /**
 * @fn    StartSSMCore
@@ -179,7 +190,7 @@ INTERFACE_DECLSPEC SSMRESULT StopSSMCore();
 * @exception
 * @see
 */
-INTERFACE_DECLSPEC SSMRESULT TerminateSSMCore(bool factoryResetFlag = false);
+INTERFACE_DECLSPEC SSMRESULT TerminateSSMCore(IN bool factoryResetFlag = false);
 
 /**
 * @fn    GetErrorMessage
@@ -192,7 +203,7 @@ INTERFACE_DECLSPEC SSMRESULT TerminateSSMCore(bool factoryResetFlag = false);
 * @exception
 * @see
 */
-INTERFACE_DECLSPEC const char *GetSSMError(SSMRESULT res);
+INTERFACE_DECLSPEC const char *GetSSMError(IN SSMRESULT res);
 
 /**
 * @fn    GetInstalledModelList
@@ -205,7 +216,7 @@ INTERFACE_DECLSPEC const char *GetSSMError(SSMRESULT res);
 * @exception
 * @see
 */
-INTERFACE_DECLSPEC SSMRESULT GetInstalledModelList(std::vector<ISSMResource *> *pList);
+INTERFACE_DECLSPEC SSMRESULT GetInstalledModelList(OUT std::vector<ISSMResource *> *pList);
 
 #ifdef __cplusplus
 }

@@ -27,7 +27,7 @@ Token::Token()
     condition = ModelCondition::PREDICATE_EQ;
 }
 
-std::vector<std::string> CCQLParser::tokenize(const std::string &input)
+std::vector<std::string> CCQLParser::tokenize(IN const std::string &input)
 {
     std::vector<std::string> temp;
     temp.push_back(",");
@@ -51,12 +51,11 @@ std::vector<std::string> CCQLParser::tokenize(const std::string &input)
     return tokens_temp;
 }
 
-bool CCQLParser::parse(std::string input, Token *root)
+void CCQLParser::parse(IN std::string input, OUT Token *root)
 {
     std::vector<std::string> tokens = tokenize(input);
     bool flag;//get,sub,if
     bool value_flag = false;
-    bool isCondition = false;
 
     for (unsigned int i = 0 ; i < tokens.size() ; i++)
     {
@@ -83,7 +82,6 @@ bool CCQLParser::parse(std::string input, Token *root)
                 i++;
                 //temp1 = temp;
                 flag = false;
-                isCondition = true;
             }
             else
             {
@@ -97,7 +95,6 @@ bool CCQLParser::parse(std::string input, Token *root)
                 if (tokens.at(i) == "if")
                 {
                     flag = false;
-                    isCondition = true;
                 }
                 else
                 {
@@ -105,7 +102,6 @@ bool CCQLParser::parse(std::string input, Token *root)
                 }
             }
 
-            SORT lastType = Command;
             while (1)
             {
                 //int count = 0;
@@ -114,7 +110,6 @@ bool CCQLParser::parse(std::string input, Token *root)
                 if (value_flag == true)
                 {
                     value_flag = false;
-                    lastType = Context;
                     i++;
                 }
 
@@ -169,13 +164,8 @@ bool CCQLParser::parse(std::string input, Token *root)
                 else
                 {
                     temp1.type = Context;
-
-                    //if current context token is reserved keyword, that return error
-                    if (tolower(tokens.at(i)) == "get" || tolower(tokens.at(i)) == "subscribe")
-                    {
-                        return false;
-                    }
                 }
+
 
                 if (flag == true)
                 {
@@ -185,45 +175,23 @@ bool CCQLParser::parse(std::string input, Token *root)
                         temp1.type = And_or;
                         flag = false;
                     }
-
-                    if (split(tokens.at(i), &temp1, flag ) != true) //false -> Property
-                    {
-                        return false;
-                    }
+                    split(tokens.at(i), &temp1, flag );//false -> Property
+                    temp.child_token.push_back(temp1);
                 }
                 else
                 {
-                    //token count not matched, return and let grammer checker detects
-                    if (tokens.size() < i + 3)
-                    {
-                        return false;
-                    }
-
-                    if (split(tokens.at(i), &temp1, flag , tokens.at(i + 1),
-                              tokens.at(i + 2)) != true) //false -> Property
-                    {
-                        return false;
-                    }
+                    split(tokens.at(i), &temp1, flag , tokens.at(i + 1), tokens.at(i + 2)); //false -> Property
                     flag = true;
+                    temp.child_token.push_back(temp1);
                 }
 
-                if (isCondition && lastType == temp1.type)
-                {
-                    return false;
-                }
-
-                lastType = temp1.type;
-
-                temp.child_token.push_back(temp1);
             }
             root->child_token.push_back(temp);
         }
     }
-
-    return true;
 }
 
-std::string CCQLParser::tolower(std::string str)
+std::string CCQLParser::tolower(IN std::string str)
 {
     for (unsigned int i = 0 ; i < str.size() ; i++)
     {
@@ -236,8 +204,8 @@ std::string CCQLParser::tolower(std::string str)
     return str;
 }
 
-std::vector<std::string> CCQLParser::getTokens(const std::string &str,
-        const std::string &delimiters)
+std::vector<std::string> CCQLParser::getTokens(IN const std::string &str,
+        IN const std::string &delimiters)
 {
     std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
     std::string::size_type pos     = str.find_first_of(delimiters, lastPos);
@@ -250,13 +218,10 @@ std::vector<std::string> CCQLParser::getTokens(const std::string &str,
         pos = str.find_first_of(delimiters, lastPos);
     }
 
-    if (tokens.size() == 0)
-        tokens.push_back("\"\"");
-
     return tokens;
 }
 
-void CCQLParser::check_index(std::string input, Token *token)
+void CCQLParser::check_index(IN std::string input, OUT Token *token)
 {
     std::vector<std::string> tokens = getTokens(input, "[");
 
@@ -283,8 +248,8 @@ void CCQLParser::check_index(std::string input, Token *token)
     }
 }
 
-bool CCQLParser::split(std::string input, Token *root, bool flag, std::string arg1,
-                       std::string arg2)
+void CCQLParser::split(IN std::string input, IN Token *root, bool flag, IN std::string arg1,
+                       IN std::string arg2)
 {
     std::vector<std::string> tokens = getTokens(input, ".");
     Token *temp_token = root;
@@ -315,7 +280,7 @@ bool CCQLParser::split(std::string input, Token *root, bool flag, std::string ar
                     //root->child_token.push_back(temp1);
                 }
 
-                else
+                else if (check_number(arg2))
                 {
                     //temp1->number = atof(arg2.c_str());
 
@@ -327,11 +292,6 @@ bool CCQLParser::split(std::string input, Token *root, bool flag, std::string ar
                     else if (check_number(arg2) == TYPEREAL)
                     {
                         property.propertyType = ModelProperty::TYPE_REAL;
-                    }
-                    else
-                    {
-                        //unknown type raise error
-                        return false;
                     }
                     property.propertyValue = arg2;
 
@@ -347,47 +307,47 @@ bool CCQLParser::split(std::string input, Token *root, bool flag, std::string ar
                 temp_token->child_token.push_back(temp1);
                 temp_token = &(temp_token->child_token.back());
             }
+
         }
     }
-
-    return true;
 }
 
-int CCQLParser::check_number(std::string &str)
+int CCQLParser::check_number(IN std::string &str)
 {
-    int flag = 0; // 0 text /1 integer /2 real
-    int dotCount = 0;
+    //int flag = 0; // 0 text /1 integer /2 real
 
-    std::string::const_iterator it = str.begin();
-    while (it != str.end())
+    int flag = 0;
+    for (unsigned int i = 0 ; i < str.size(); i++)
     {
-        if (*it == '.')
+        if (str[i] == '.')
         {
-            dotCount++;
+            flag++;
         }
-        else if (isdigit(*it) == false)
+        else if (isdigit(str[i]))
         {
-            //this is text
-            dotCount = 2;
-            break;
+
         }
-
-        ++it;
+        else
+        {
+            return TYPETEXT;
+        }
     }
 
-    if (dotCount == 0)
+    if (flag == 1)
     {
-        flag = 1;
+        return TYPEREAL;
     }
-    else if (dotCount == 1)
+    else if (flag > 1)
     {
-        flag = 2;
+        return TYPETEXT;
     }
-
-    return flag;
+    else
+    {
+        return TYPEINTEGER;
+    }
 }
 
-std::string CCQLParser::check_Predicate(std::string input)
+std::string CCQLParser::check_Predicate(IN std::string input)
 {
     std::string temp = "";
     for (unsigned int i = 0 ; i < input.size() ; i++)
@@ -433,7 +393,7 @@ std::string CCQLParser::check_Predicate(std::string input)
     return temp;
 }
 
-bool CCQLParser::check_grammer(Token *token)
+bool CCQLParser::check_grammer(IN Token *token)
 {
     if (token->child_token.size() == 1 && tolower(token->child_token.at(0).name) == "get")
     {

@@ -68,13 +68,6 @@ class CSensingEngine :
                 *ppObject = pBase;
                 return SSM_S_OK;
             }
-            else if (IsEqualOID(objectID, OID_IContextRepository))
-            {
-                IBase *pBase = this;
-                pBase->addRef();
-                *ppObject = m_pContextRepository;
-                return SSM_S_OK;
-            }
 
             return SSM_E_NOINTERFACE;
         }
@@ -93,8 +86,8 @@ class CSensingEngine :
         * @exception
         * @see
         */
-        SSMRESULT registerContext(TypeofEvent callType, ISSMResource *pSSMResource,
-                                  IEvent *pEvent);
+        SSMRESULT registerContext(IN TypeofEvent callType, IN ISSMResource *pSSMResource,
+                                  IN IEvent *pEvent);
 
         /**
         * @fn           unregisterContext
@@ -110,8 +103,8 @@ class CSensingEngine :
         * @exception
         * @see
         */
-        SSMRESULT  unregisterContext(TypeofEvent callType, ISSMResource *pSSMResource,
-                                     IEvent *pEvent);
+        SSMRESULT  unregisterContext(IN TypeofEvent callType, IN ISSMResource *pSSMResource,
+                                     IN IEvent *pEvent);
 
         /**
         * @fn           getList
@@ -125,7 +118,7 @@ class CSensingEngine :
         * @exception
         * @see
         */
-        SSMRESULT getList(std::vector<ISSMResource *> *pList);
+        SSMRESULT getList(OUT std::vector<ISSMResource *> *pList);
 
         /**
         * @fn           onEvent
@@ -142,6 +135,6 @@ class CSensingEngine :
         * @exception
         * @see
         */
-        int onEvent(std::string name, TypeofEvent callType, std::vector<ContextData> ctxData);
+        int onEvent(IN std::string name, IN TypeofEvent callType, IN std::vector<ContextData> ctxData);
 };
 #endif

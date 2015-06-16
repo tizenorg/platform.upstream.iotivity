@@ -96,4 +96,3 @@ The server and client can run in same machine or in different machines.
 
 5. To run simpleServer do ‘./simpleServer’ and to run simpleClient do ‘./simpleClient’.
 
-

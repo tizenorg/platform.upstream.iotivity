@@ -37,7 +37,8 @@ using namespace std;
 // Forward declaring the entityHandler
 OCEntityHandlerResult entityHandler(std::shared_ptr<OCResourceRequest> request);
 
-/// This class represents a single resource named 'GarageResource'.
+/// This class represents a single resource named 'lightResource'. This resource has
+
 class GarageResource
 {
 public:
@@ -52,22 +53,25 @@ public:
     // array of lights representation with in GarageResource
     OCRepresentation m_lightRep;
     std::vector<OCRepresentation> m_reps;
-    std::vector<std::vector<int>> m_hingeStates;
 
 public:
     /// Constructor
-    GarageResource(): m_name("John's Garage"), m_state(false), m_garageUri("/a/garage"),
-        m_hingeStates{{1,2,3},{4,5,6}}
-    {
+    GarageResource(): m_name("John's Garage"), m_state(false), m_garageUri("/a/garage") {
         // Initialize representation
         m_garageRep.setUri(m_garageUri);
 
-        m_garageRep["state"] = m_state;
-        m_garageRep["name"] = m_name;
+        m_garageRep.setValue("state", m_state);
+        m_garageRep.setValue("name", m_name);
 
         // For demonstration purpose we are setting x to nullptr here.
         // In reality it may happen else where.
-        m_garageRep["nullAttribute"] = nullptr;
+        int* x = nullptr;
+
+        // Check for nullptr and set null for that attribute
+        if(x == nullptr)
+        {
+            m_garageRep.setNULL("nullAttribute");
+        }
 
         std::vector<bool> lightStates;
         std::vector<int>  lightPowers;
@@ -78,32 +82,30 @@ public:
             lightPowers.push_back(i);
         }
 
-        m_lightRep["states"] = lightStates;
-        m_lightRep["powers"] = lightPowers;
+        m_lightRep.setValue("states", lightStates);
+        m_lightRep.setValue("powers", lightPowers);
 
         // Storing another representation within a representation
-        m_garageRep["light"] = m_lightRep;
+        m_garageRep.setValue("light", m_lightRep);
 
         OCRepresentation rep1;
         int value1 = 5;
-        rep1["key1"] = value1;
+        rep1.setValue("key1", value1);
         OCRepresentation rep2;
         int value2 = 10;
-        rep2["key2"] = value2;
+        rep2.setValue("key2", value2);
 
         m_reps.push_back(rep1);
         m_reps.push_back(rep2);
 
         // storing array of representations
-        m_garageRep["reps"] =  m_reps;
+        m_garageRep.setValue("reps", m_reps);
 
 
         // setting json string
         std::string json = "{\"num\":10,\"rno\":23.5,\"aoa\":[[1,2],[3]],\"str\":\"john\",\
 \"object\":{\"bl1\":false,\"ar\":[2,3]}, \"objects\":[{\"bl2\":true,\"nl\":null},{\"ar1\":[1,2]}]}";
-        m_garageRep["json"] = json;
-
-        m_garageRep["hinges"] = m_hingeStates;
+        m_garageRep.setValue("json", json);
     }
 
     /* Note that this does not need to be a member function: for classes you do not have
@@ -162,7 +164,7 @@ public:
     // sending out.
     OCRepresentation get()
     {
-        m_garageRep["state"] = m_state;
+        m_garageRep.setValue("state", m_state);
 
         return m_garageRep;
     }
@@ -195,6 +197,12 @@ OCEntityHandlerResult entityHandler(std::shared_ptr<OCResourceRequest> request)
         std::string requestType = request->getRequestType();
         int requestFlag = request->getRequestHandlerFlag();
 
+        if(requestFlag & RequestHandlerFlag::InitFlag)
+        {
+            cout << "\t\trequestFlag : Init\n";
+
+            // entity handler to perform resource initialization operations
+        }
         if(requestFlag & RequestHandlerFlag::RequestFlag)
         {
             cout << "\t\trequestFlag : Request\n";
@@ -269,7 +277,7 @@ int main(int argc, char* argv[1])
     }
     catch(OCException e)
     {
-        oclog() << e.what();
+        //log(e.what());
     }
 
     // No explicit call to stop the OCPlatform
@@ -277,4 +285,3 @@ int main(int argc, char* argv[1])
 
     return 0;
 }
-

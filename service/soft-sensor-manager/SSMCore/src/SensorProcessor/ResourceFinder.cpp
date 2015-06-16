@@ -32,8 +32,6 @@ SSMRESULT CResourceFinder::finalConstruct()
 
     m_pResourceFinderEvent = NULL;
 
-    m_multicastPresenceHandle = nullptr;
-
 CLEANUP:
     return res;
 }
@@ -42,7 +40,7 @@ void CResourceFinder::finalRelease()
 {
 }
 
-SSMRESULT CResourceFinder::registerResourceFinderEvent(IResourceFinderEvent *pEvent)
+SSMRESULT CResourceFinder::registerResourceFinderEvent(IN IResourceFinderEvent *pEvent)
 {
     m_pResourceFinderEvent = pEvent;
     return SSM_S_OK;
@@ -61,6 +59,8 @@ void CResourceFinder::onResourceFound(std::shared_ptr< OC::OCResource > resource
         pMessage[0] = RESOURCE_DISCOVER_REQUESTPROFILE;
         pMessage[1] = reinterpret_cast<intptr_t> (new  std::shared_ptr<OC::OCResource>(resource));
 
+        std::cout << "Resource Found !! >> " << path << std::endl;
+
         m_pTasker->addTask(this, pMessage);
     }
 }
@@ -71,14 +71,12 @@ void CResourceFinder::presenceHandler(OCStackResult result, const unsigned int n
     SSMRESULT res = SSM_E_FAIL;
     OCStackResult ret = OC_STACK_ERROR;
     intptr_t *pMessage = NULL;
-    std::ostringstream requestURI;
 
     switch (result)
     {
         case OC_STACK_OK:
-            requestURI << "coap://" << hostAddress << "/oc/core?rt=SSManager.Sensor";
-
-            ret = OC::OCPlatform::findResource("", requestURI.str(), OC_ALL,
+            ret = OC::OCPlatform::findResource("",
+                                               "coap://" + hostAddress + "/oc/core?rt=SoftSensorManager.Sensor",
                                                std::bind(&CResourceFinder::onResourceFound, this, std::placeholders::_1));
 
             if (ret != OC_STACK_OK)
@@ -87,6 +85,7 @@ void CResourceFinder::presenceHandler(OCStackResult result, const unsigned int n
             break;
 
         case OC_STACK_PRESENCE_STOPPED:
+        case OC_STACK_PRESENCE_TIMEOUT:
             if (m_mapResources.find(hostAddress) != m_mapResources.end())
             {
                 while (!m_mapResources[hostAddress].empty())
@@ -100,9 +99,6 @@ void CResourceFinder::presenceHandler(OCStackResult result, const unsigned int n
 
                 m_mapResources.erase(hostAddress);
             }
-            break;
-
-        case OC_STACK_PRESENCE_TIMEOUT:
             break;
 
         case OC_STACK_VIRTUAL_DO_NOT_HANDLE:
@@ -121,21 +117,18 @@ SSMRESULT CResourceFinder::startResourceFinder()
     SSMRESULT res = SSM_E_FAIL;
     OCStackResult ret = OC_STACK_ERROR;
 
-    std::ostringstream requestURI;
-    requestURI << OC_MULTICAST_DISCOVERY_URI << "?rt=SSManager.Sensor";
+    OC::OCPlatform::OCPresenceHandle presenceHandle = nullptr;
 
-    std::ostringstream multicastPresenceURI;
-    multicastPresenceURI << "coap://" << OC_MULTICAST_PREFIX;
-
-    ret = OC::OCPlatform::findResource("", requestURI.str(), OC_ALL,
+    ret = OC::OCPlatform::findResource("", "coap://224.0.1.187/oc/core?rt=SoftSensorManager.Sensor",
                                        std::bind(&CResourceFinder::onResourceFound, this, std::placeholders::_1));
 
     if (ret != OC_STACK_OK)
         SSM_CLEANUP_ASSERT(SSM_E_FAIL);
 
-    ret = OC::OCPlatform::subscribePresence(m_multicastPresenceHandle, multicastPresenceURI.str(),
-                                            "SSManager.Sensor", OC_ALL, std::bind(&CResourceFinder::presenceHandler, this,
-                                                    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    ret = OC::OCPlatform::subscribePresence(presenceHandle, "coap://224.0.1.187",
+                                            "SoftSensorManager.Sensor",
+                                            std::bind(&CResourceFinder::presenceHandler, this, std::placeholders::_1,
+                                                    std::placeholders::_2, std::placeholders::_3));
 
     if (ret != OC_STACK_OK)
         SSM_CLEANUP_ASSERT(SSM_E_FAIL);
@@ -146,41 +139,23 @@ CLEANUP:
     return res;
 }
 
-SSMRESULT CResourceFinder::stopResourceFinder()
-{
-    SSMRESULT res = SSM_E_FAIL;
-    OCStackResult ret = OC_STACK_ERROR;
-
-    ret = OC::OCPlatform::unsubscribePresence(m_multicastPresenceHandle);
-
-    if (ret != OC_STACK_OK)
-        SSM_CLEANUP_ASSERT(SSM_E_FAIL);
-
-    m_multicastPresenceHandle = nullptr;
-
-    res = SSM_S_OK;
-
-CLEANUP:
-    return res;
-}
-
-SSMRESULT CResourceFinder::startObserveResource(ISSMResource *pSensor, IEvent *pEvent)
+SSMRESULT CResourceFinder::startObserveResource(IN ISSMResource *pSensor, IN IEvent *pEvent)
 {
     return m_mapResourceHandler[pSensor->name]->startObserve(pEvent);
 }
 
-SSMRESULT CResourceFinder::stopObserveResource(ISSMResource *pSensor)
+SSMRESULT CResourceFinder::stopObserveResource(IN ISSMResource *pSensor)
 {
     return m_mapResourceHandler[pSensor->name]->stopObserve();
 }
 
-void CResourceFinder::onExecute(void *pArg)
+void CResourceFinder::onExecute(IN void *pArg)
 {
     SSMRESULT res = SSM_E_FAIL;
     OCStackResult ret = OC_STACK_ERROR;
     OC::QueryParamsMap queryParams;
     OICResourceHandler *pResourceHandler = NULL;
-    intptr_t                 *pMessage = reinterpret_cast<intptr_t *>(pArg);
+    intptr_t                 *pMessage =  reinterpret_cast<intptr_t *>(pArg);
     std::shared_ptr< OC::OCResource > *pResource = NULL;
     OC::OCPlatform::OCPresenceHandle presenceHandle = NULL;
 
@@ -203,8 +178,9 @@ void CResourceFinder::onExecute(void *pArg)
 
             m_mapResources[resourceHostAddress].push_back(resourceFullPath);
 
-            ret = pResource->get()->get(queryParams, std::bind(&OICResourceHandler::onGetResourceProfile,
-                                        pResourceHandler, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+            ret = pResource->get()->get(queryParams,
+                                        std::bind(&OICResourceHandler::onGetResourceProfile, pResourceHandler,
+                                                  std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
             if (ret != OC_STACK_OK)
                 SSM_CLEANUP_ASSERT(SSM_E_FAIL);
@@ -216,8 +192,9 @@ void CResourceFinder::onExecute(void *pArg)
                 m_mapResourcePresenceHandles.end())
             {
                 ret = OC::OCPlatform::subscribePresence(presenceHandle, ((ISSMResource *)pMessage[1])->ip,
-                                                        "SSManager.Sensor", OC_ALL, std::bind(&CResourceFinder::presenceHandler, this,
-                                                                std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+                                                        "SoftSensorManager.Sensor",
+                                                        std::bind(&CResourceFinder::presenceHandler, this, std::placeholders::_1,
+                                                                std::placeholders::_2, std::placeholders::_3));
 
                 if (ret != OC_STACK_OK)
                     SSM_CLEANUP_ASSERT(SSM_E_FAIL);
@@ -225,11 +202,7 @@ void CResourceFinder::onExecute(void *pArg)
                 m_mapResourcePresenceHandles[((ISSMResource *)pMessage[1])->ip] = presenceHandle;
             }
 
-            m_pResourceFinderEvent->onResourceFound((ISSMResource *)pMessage[1]);
-
-            if (ret != OC_STACK_OK)
-                SSM_CLEANUP_ASSERT(SSM_E_FAIL);
-
+            m_pResourceFinderEvent->onResourceFound((ISSMResource *) pMessage[1]);
             break;
 
         case RESOURCE_DISCOVER_UNINSTALL_RESOURCE:
@@ -238,8 +211,8 @@ void CResourceFinder::onExecute(void *pArg)
             if (m_mapResourcePresenceHandles.find(((OICResourceHandler *)pMessage[1])->m_SSMResource.ip) !=
                 m_mapResourcePresenceHandles.end())
             {
-                ret = OC::OCPlatform::unsubscribePresence(m_mapResourcePresenceHandles[((
-                            OICResourceHandler *)pMessage[1])->m_SSMResource.ip]);
+                ret = OC::OCPlatform::unsubscribePresence(
+                          m_mapResourcePresenceHandles[((OICResourceHandler *)pMessage[1])->m_SSMResource.ip]);
 
                 if (ret != OC_STACK_OK)
                     SSM_CLEANUP_ASSERT(SSM_E_FAIL);
@@ -247,7 +220,6 @@ void CResourceFinder::onExecute(void *pArg)
                 m_mapResourcePresenceHandles.erase(((OICResourceHandler *)pMessage[1])->m_SSMResource.ip);
             }
 
-            delete m_mapResourceHandler[((OICResourceHandler *)pMessage[1])->m_SSMResource.name];
             m_mapResourceHandler.erase(((OICResourceHandler *) pMessage[1])->m_SSMResource.name);
             break;
     }
@@ -256,7 +228,7 @@ CLEANUP:
     ;
 }
 
-void CResourceFinder::onTerminate(void *pArg)
+void CResourceFinder::onTerminate(IN void *pArg)
 {
     std::shared_ptr< OC::OCResource > *pResource = NULL;
     intptr_t *pMessage = (intptr_t *)pArg;

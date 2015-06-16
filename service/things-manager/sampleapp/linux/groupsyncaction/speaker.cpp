@@ -38,7 +38,13 @@ OCEntityHandlerResult speakerEntityHandler(const std::shared_ptr< OCResourceRequ
         int requestFlag = request->getRequestHandlerFlag();
         std::string action;
 
-        if (requestFlag == RequestHandlerFlag::RequestFlag)
+        if (requestFlag == RequestHandlerFlag::InitFlag)
+        {
+            cout << "\trequestFlag : Init\n";
+
+            // entity handler to perform resource initialization operations
+        }
+        else if (requestFlag == RequestHandlerFlag::RequestFlag)
         {
             cout << "\trequestFlag : Request\n";
 
@@ -151,7 +157,7 @@ int main(int argc, char* argv[])
     }
     catch (OCException& e)
     {
-         std::cout << "Exception: " << e.what() << std::endl;
+        //log(e.what());
     }
 
     return 0;

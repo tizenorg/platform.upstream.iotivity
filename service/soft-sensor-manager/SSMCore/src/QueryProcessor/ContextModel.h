@@ -60,11 +60,11 @@ class CContextModel :
 
         std::string                             m_secLifeTime;
 
-        void registerSSMResource(ActivationType activationType, int targetDeviceDataId,
-                                 ISSMResource *pSSMResource);
+        void registerSSMResource(IN ActivationType activationType, IN int targetDeviceDataId,
+                                 IN ISSMResource *pSSMResource);
 
-        void unregisterSSMResource(ActivationType activationType, int targetDeviceDataId,
-                                   ISSMResource *pSSMResource);
+        void unregisterSSMResource(IN ActivationType activationType, IN int targetDeviceDataId,
+                                   IN ISSMResource *pSSMResource);
 
     public:
         SSMRESULT finalConstruct();
@@ -85,8 +85,8 @@ class CContextModel :
         * @exception
         * @see
         */
-        SSMRESULT create(ConstructionType constructionType, IContextModel *pParentModel,
-                         std::string modelName, ModelPropertyVec *pModelProperties);
+        SSMRESULT create(IN ConstructionType constructionType, IN IContextModel *pParentModel,
+                         IN std::string modelName, IN ModelPropertyVec *pModelProperties);
 
         /**
         * @fn     registerContextModelEvent
@@ -99,11 +99,11 @@ class CContextModel :
         * @exception
         * @see
         */
-        SSMRESULT registerContextModelEvent(IContextModelEvent *pContextModelEvent);
+        SSMRESULT registerContextModelEvent(IN IContextModelEvent *pContextModelEvent);
 
-        void onExecute(void *pArg);
+        void onExecute(IN void *pArg);
 
-        void onTerminate(void *pArg);
+        void onTerminate(IN void *pArg);
 
         /**
         * @fn     onEvent
@@ -118,7 +118,7 @@ class CContextModel :
         * @exception
         * @see
         */
-        int onEvent(std::string deviceID, TypeofEvent callType, std::vector<ContextData> ctxData);
+        int onEvent(IN std::string deviceID, IN TypeofEvent callType, IN std::vector<ContextData> ctxData);
 
         SSMRESULT queryInterface(const OID &objectID, IBase **ppObject)
         {
@@ -188,7 +188,7 @@ class CContextModel :
         * @exception
         * @see
         */
-        SSMRESULT getParentDataId(int dataId, IContextModel *pParentModel, int *pParentDataId);
+        SSMRESULT getParentDataId(IN int dataId, IN IContextModel *pParentModel, OUT int *pParentDataId);
 
         /**
         * @fn     getChildDataId
@@ -203,7 +203,7 @@ class CContextModel :
         * @exception
         * @see
         */
-        SSMRESULT getChildDataId(int dataId, IContextModel *pChildModel, IntVec *pChildDataIds);
+        SSMRESULT getChildDataId(IN int dataId, IN IContextModel *pChildModel, OUT IntVec *pChildDataIds);
 
         /**
         * @fn     activate
@@ -217,7 +217,7 @@ class CContextModel :
         * @exception
         * @see
         */
-        SSMRESULT activate(ActivationType activationType, int targetDeviceDataId);
+        SSMRESULT activate(IN ActivationType activationType, IN int targetDeviceDataId);
 
         /**
         * @fn     deactivate
@@ -232,9 +232,9 @@ class CContextModel :
         * @exception
         * @see
         */
-        SSMRESULT deactivate(ActivationType activationType, int targetDeviceDataId);
+        SSMRESULT deactivate(IN ActivationType activationType, IN int targetDeviceDataId);
 
-        //SSMRESULT GetModelSchema(ModelPropertyVec *pModelProperties);
+        //SSMRESULT GetModelSchema(OUT ModelPropertyVec *pModelProperties);
 
         /**
         * @fn     addModelData
@@ -249,7 +249,7 @@ class CContextModel :
         * @exception
         * @see
         */
-        SSMRESULT addModelData(int parentDataId, ModelPropertyVec *pData, int *pDataId);
+        SSMRESULT addModelData(IN int parentDataId, IN ModelPropertyVec *pData, OUT int *pDataId);
 
         /**
         * @fn     updateModelData
@@ -263,7 +263,7 @@ class CContextModel :
         * @exception
         * @see
         */
-        SSMRESULT updateModelData(int dataId, ModelPropertyVec *pData);
+        SSMRESULT updateModelData(IN int dataId, IN ModelPropertyVec *pData);
 
         /**
         * @fn     deleteModelData
@@ -276,7 +276,7 @@ class CContextModel :
         * @exception
         * @see
         */
-        SSMRESULT deleteModelData(int dataId);
+        SSMRESULT deleteModelData(IN int dataId);
 
         /**
         * @fn     getModelData
@@ -290,7 +290,7 @@ class CContextModel :
         * @exception
         * @see
         */
-        SSMRESULT getModelData(int dataId, ModelPropertyVec *pData);
+        SSMRESULT getModelData(IN int dataId, OUT ModelPropertyVec *pData);
 
         /**
         * @fn     getModelDataSet
@@ -306,8 +306,8 @@ class CContextModel :
         * @exception
         * @see
         */
-        SSMRESULT getModelDataSet(int startIndex, int count,
-                                  std::vector<ModelPropertyVec> *pDataSet, int *pLastIndex);
+        SSMRESULT getModelDataSet(IN int startIndex, IN int count,
+                                  OUT std::vector<ModelPropertyVec> *pDataSet, OUT int *pLastIndex);
 
         /**
         * @fn     createConditionedModel
@@ -321,8 +321,8 @@ class CContextModel :
         * @exception
         * @see
         */
-        SSMRESULT createConditionedModel(ModelConditionVec *pModelConditionVec,
-                                         IConditionedModel **ppConditionedModel);
+        SSMRESULT createConditionedModel(IN ModelConditionVec *pModelConditionVec,
+                                         OUT IConditionedModel **ppConditionedModel);
 
         //SSMRESULT CleanUpModelData();
 
@@ -339,8 +339,8 @@ class CContextModel :
         * @exception
         * @see
         */
-        void addSSMResourceAndDeviceDataId(std::string deviceId, int deviceDataId,
-                                           ISSMResource *pSSMResource);
+        void addSSMResourceAndDeviceDataId(IN std::string deviceId, IN int deviceDataId,
+                                           IN ISSMResource *pSSMResource);
 
         /**
         * @fn     SetLifeTime

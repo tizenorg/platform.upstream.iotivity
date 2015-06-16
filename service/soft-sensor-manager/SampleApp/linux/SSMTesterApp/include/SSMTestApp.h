@@ -35,16 +35,10 @@ namespace APPMenu
 {
     typedef enum
     {
-        NONE = 0, REGISTER, UNREGISTER, DISCOMFORT_SAMPLE, ITS_SAMPLE, BMI_SAMPLE, EXIT = 9
+        NONE = 0, REGISTER, UNREGISTER, DISCOMFORT_SAMPLE, EXIT = 9
     } APPMenu;
 }
 ;
-
-typedef enum
-{
-    UNKOWNBMI = 0, UNDERWEIGHT, NORMALRANGE, OVERWEIGHT, OBESE
-} BMIResult;
-
 
 typedef enum
 {
@@ -53,6 +47,9 @@ typedef enum
 
 class SSMTestApp: public IQueryEngineEvent
 {
+    private:
+        SSMInterface m_SSMClient;
+
     public:
 
         SSMTestApp();
@@ -60,8 +57,6 @@ class SSMTestApp: public IQueryEngineEvent
         void displayMenu();
         void registerQuery(std::string queryString);
         void unregisterQuery();
-
-        void TrajectoryDataOutput(IModelData *pModelData);
 
         /* operations from listener interface */
         SSMRESULT onQueryEngineEvent(int cqid, IDataReader *pResult);

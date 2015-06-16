@@ -26,55 +26,58 @@
 extern "C" {
 #endif
 
-JNIEXPORT void JNICALL Java_org_iotivity_service_ssm_CoreController_initializeSSMCore
+JNIEXPORT void JNICALL Java_com_sec_android_ssmcore_CoreController_InitializeSSMCore
 (JNIEnv *env, jclass clz, jstring jstrXmlDescription);
 
-JNIEXPORT void JNICALL Java_org_iotivity_service_ssm_CoreController_startSSMCore
+JNIEXPORT void JNICALL Java_com_sec_android_ssmcore_CoreController_StartSSMCore
 (JNIEnv *env, jclass clz);
 
-JNIEXPORT void JNICALL Java_org_iotivity_service_ssm_CoreController_stopSSMCore
+JNIEXPORT void JNICALL Java_com_sec_android_ssmcore_CoreController_StopSSMCore
 (JNIEnv *env, jclass clz);
 
-JNIEXPORT void JNICALL Java_org_iotivity_service_ssm_CoreController_terminateSSMCore
+JNIEXPORT void JNICALL Java_com_sec_android_ssmcore_CoreController_TerminateSSMCore
 (JNIEnv *env, jclass clz);
 
-JNIEXPORT jobject JNICALL Java_org_iotivity_service_ssm_CoreController_createQueryEngine
+JNIEXPORT jobject JNICALL Java_com_sec_android_ssmcore_CoreController_CreateQueryEngine
 (JNIEnv *env, jclass clz);
 
-JNIEXPORT jint JNICALL Java_org_iotivity_service_ssm_CoreController_releaseQueryEngine
+JNIEXPORT jint JNICALL Java_com_sec_android_ssmcore_CoreController_ReleaseQueryEngine
 (JNIEnv *env, jclass clz, jobject queryEngine);
 
-JNIEXPORT jint JNICALL Java_org_iotivity_service_ssm_CoreController_executeContextQuery
+JNIEXPORT jint JNICALL Java_com_sec_android_ssmcore_CoreController_ExecuteContextQuery
 (JNIEnv *env, jclass clz, jint pQueryEngineInstance, jstring jstrContextQuery);
 
-JNIEXPORT void JNICALL Java_org_iotivity_service_ssm_CoreController_registerQueryEvent
+JNIEXPORT void JNICALL Java_com_sec_android_ssmcore_CoreController_RegisterQueryEvent
 (JNIEnv *env, jclass clz, jint pQueryEngineInstance, jobject queryEngineEvent);
 
-JNIEXPORT void JNICALL Java_org_iotivity_service_ssm_CoreController_killContextQuery
+JNIEXPORT void JNICALL Java_com_sec_android_ssmcore_CoreController_KillContextQuery
 (JNIEnv *env, jclass clz, jint pQueryEngineInstance, jint cqid);
 
-JNIEXPORT jint JNICALL Java_org_iotivity_service_ssm_CoreController_getDataId
+JNIEXPORT jint JNICALL Java_com_sec_android_ssmcore_CoreController_Release
+(JNIEnv *env, jclass clz, jint pQueryEngineInstance);
+
+JNIEXPORT jint JNICALL Java_com_sec_android_ssmcore_CoreController_GetDataId
 (JNIEnv *env, jclass clz, jint pDataReaderInstance);
 
-JNIEXPORT jobject JNICALL Java_org_iotivity_service_ssm_CoreController_getAffectedModels
+JNIEXPORT jobject JNICALL Java_com_sec_android_ssmcore_CoreController_GetAffectedModels
 (JNIEnv *env, jclass clz, jint pDataReaderInstance);
 
-JNIEXPORT jint JNICALL Java_org_iotivity_service_ssm_CoreController_getModelDataCount
+JNIEXPORT jint JNICALL Java_com_sec_android_ssmcore_CoreController_GetModelDataCount
 (JNIEnv *env, jclass clz, jint pDataReaderInstance, jstring jstrModelName);
 
-JNIEXPORT jobject JNICALL Java_org_iotivity_service_ssm_CoreController_getModelData
+JNIEXPORT jobject JNICALL Java_com_sec_android_ssmcore_CoreController_GetModelData
 (JNIEnv *env, jclass clz, jint pDataReaderInstance, jstring jstrModelName, jint jintDataIndex );
 
-JNIEXPORT jint JNICALL Java_org_iotivity_service_ssm_CoreController_getPropertyCount
+JNIEXPORT jint JNICALL Java_com_sec_android_ssmcore_CoreController_GetPropertyCount
 (JNIEnv *env, jclass clz, jint pIModelDataInstance );
 
-JNIEXPORT jstring JNICALL Java_org_iotivity_service_ssm_CoreController_getPropertyName
+JNIEXPORT jstring JNICALL Java_com_sec_android_ssmcore_CoreController_GetPropertyName
 (JNIEnv *env, jclass clz, jint pIModelDataInstance, jint propertyIndex );
 
-JNIEXPORT jstring JNICALL Java_org_iotivity_service_ssm_CoreController_getPropertyValue
+JNIEXPORT jstring JNICALL Java_com_sec_android_ssmcore_CoreController_GetPropertyValue
 (JNIEnv *env, jclass clz, jint pIModelDataInstance, jint propertyIndex );
 
-JNIEXPORT void JNICALL Java_org_iotivity_service_ssm_CoreController_registerReportReceiver
+JNIEXPORT void JNICALL Java_com_sec_android_ssmcore_CoreController_RegisterReportReceiver
 (JNIEnv *env, jclass clz, jobject reportReceiver );
 
 #ifdef __cplusplus

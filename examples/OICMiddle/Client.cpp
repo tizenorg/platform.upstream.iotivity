@@ -1,6 +1,6 @@
 //******************************************************************
 //
-// Copyright 2014 Intel Mobile Communications GmbH All Rights Reserved.
+// Copyright 2014 Intel Corporation.
 //
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
@@ -19,7 +19,6 @@
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 #include <map>
-#include <stdexcept>
 
 #include "WrapResource.h"
 #include "Client.h"
@@ -39,7 +38,7 @@ void MiddleClient::findResources()
 {
     m_resourceMap.clear();
 
-    OC::OCPlatform::findResource("", OC_WELL_KNOWN_QUERY, OC_ALL, m_findCB);
+    OC::OCPlatform::findResource("", OC_WELL_KNOWN_QUERY, m_findCB);
 }
 
 void MiddleClient::foundOCResource(shared_ptr<OCResource> resource)
@@ -67,21 +66,14 @@ void MiddleClient::foundOCResource(shared_ptr<OCResource> resource)
  */
 string MiddleClient::formatResourceID(std::shared_ptr<OCResource> resource)
 {
-    if(!resource)
-    {
-        throw invalid_argument("Invalid resource object in formatResourceID");
-    }
-
-    return resource->sid() + resource->uri();
+    string host = resource->host();
+    if (host.compare(0, 7, "coap://") == 0)
+        host = host.erase(0, 7);
+    return host + resource->uri();
 }
 
 void MiddleClient::addResource(WrapResource *wres)
 {
-    if(!wres)
-    {
-        throw invalid_argument("Invalid WrapResource object in addResource");
-    }
-
     string resourceID = wres->getResourceID();
     try {
         m_resourceMap[resourceID];

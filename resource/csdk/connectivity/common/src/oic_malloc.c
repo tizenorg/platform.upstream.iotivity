@@ -25,9 +25,11 @@
 #include "oic_malloc.h"
 
 // Enable extra debug logging for malloc.  Comment out to disable
+//#define ENABLE_MALLOC_DEBUG  (1)
+
 #ifdef ENABLE_MALLOC_DEBUG
 #include "logger.h"
-#define TAG "OICMalloc"
+#define TAG PCF("OICMalloc")
 #endif
 
 //-----------------------------------------------------------------------------
@@ -53,9 +55,6 @@
 //-----------------------------------------------------------------------------
 // Public APIs
 //-----------------------------------------------------------------------------
-#ifdef ENABLE_MALLOC_DEBUG
-static uint32_t count;
-#endif
 
 void *OICMalloc(size_t size)
 {
@@ -68,8 +67,7 @@ void *OICMalloc(size_t size)
     }
 
     ptr = malloc(size);
-    count++;
-    OIC_LOG_V(INFO, TAG, "malloc: ptr=%p, size=%u, count=%u", ptr, size, count);
+    OIC_LOG_V(INFO, TAG, "malloc: ptr=%p, size=%u", ptr, size);
     return ptr;
 #else
     if (0 == size)
@@ -80,31 +78,12 @@ void *OICMalloc(size_t size)
 #endif
 }
 
-void *OICCalloc(size_t num, size_t size)
-{
-    if(0 == size || 0 == num)
-    {
-        return NULL;
-    }
-
-#ifdef ENABLE_MALLOC_DEBUG
-    void *ptr = 0;
-
-    ptr = calloc(num, size);
-    OIC_LOG_V(INFO, TAG, "calloc: ptr=%p, num=%u, size=%u", ptr, num, size);
-    return ptr;
-#else
-    return calloc(num, size);
-#endif
-}
-
 void OICFree(void *ptr)
 {
 #ifdef ENABLE_MALLOC_DEBUG
-    OIC_LOG_V(INFO, TAG, "free: ptr=%p, count=%u", ptr, --count);
+    OIC_LOG_V(INFO, TAG, "free: ptr=%p", ptr);
 #endif
 
     free(ptr);
 }
-
 

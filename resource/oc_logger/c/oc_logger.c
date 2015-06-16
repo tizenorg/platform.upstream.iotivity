@@ -24,8 +24,8 @@
 #include <stdlib.h>
 
 oc_log_ctx_t *oc_log_make_ctx(
-                            void*                 world,
-                            const oc_log_level    level,
+							void*				  world,
+                            const oc_log_level 	  level,
                             oc_log_init_t         init,
                             oc_log_destroy_t      destroy,
                             oc_log_flush_t        flush,
@@ -42,21 +42,15 @@ oc_log_ctx_t *oc_log_make_ctx(
     0 == set_level ||
     0 == write_level ||
     0 == set_module)
- {
   return 0;
- }
 
- if(OC_LOG_MIN_VAL__ >= level || OC_LOG_MAX_VAL__ <= level)
- {
-     return 0;
- }
+ if(__OC_LOG_MIN__ > level || __OC_LOG_MAX__ < level)
+  return 0;
 
  log_ctx = (oc_log_ctx_t *)malloc(sizeof(oc_log_ctx_t));
 
- if(!log_ctx)
- {
-     return 0;
- }
+ if(0 == log_ctx)
+  return 0;
 
  log_ctx->ctx           = 0; /* we'll get to this in a sec... */
  log_ctx->log_level     = level;
@@ -65,11 +59,11 @@ oc_log_ctx_t *oc_log_make_ctx(
  log_ctx->destroy       = destroy;
  log_ctx->flush         = flush;
  log_ctx->set_level     = set_level;
- log_ctx->set_module    = set_module;
+ log_ctx->set_module	= set_module;
 
  log_ctx->write_level   = write_level;
 
- if(!log_ctx->init(log_ctx, world))
+ if(0 == log_ctx->init(log_ctx, world))
   {
     free(log_ctx);
     return 0;
@@ -80,103 +74,86 @@ oc_log_ctx_t *oc_log_make_ctx(
 
 void oc_log_destroy(oc_log_ctx_t *ctx)
 {
- if(!ctx)
- {
-     return;
- }
+ if(0 == ctx)
+  return;
 
  ctx->destroy(ctx);
 
  if(0 != ctx->module_name)
- {
-     free(ctx->module_name);
- }
+  free(ctx->module_name);
 
  free(ctx);
 }
 
 int oc_log_init(oc_log_ctx_t *ctx, void *world)
 {
- if(!ctx)
- {
-     return 0;
- }
+ if(0 == ctx)
+  return 0;
 
  return ctx->init(ctx, world);
 }
 
 void oc_log_flush(oc_log_ctx_t *ctx)
 {
-    if(!ctx)
+    if(0 == ctx)
     {
         return;
     }
     ctx->flush(ctx);
 }
 
-void oc_log_set_level(oc_log_ctx_t *ctx, const oc_log_level loglevel)
+void oc_log_set_level(oc_log_ctx_t *ctx, const oc_log_level ll)
 {
-    if(!ctx)
+    if(0 == ctx)
     {
         return;
     }
-    ctx->set_level(ctx, loglevel);
+    ctx->set_level(ctx, ll);
 }
 
 size_t oc_log_write(oc_log_ctx_t *ctx, const char *msg)
 {
-    if(!ctx)
-    {
-        return 0;
-    }
+ if(0 == ctx)
+  return 0;
 
  return oc_log_write_level(ctx, ctx->log_level, msg);
 }
 
-size_t oc_log_write_level(oc_log_ctx_t *ctx, const oc_log_level loglevel, const char *msg)
+size_t oc_log_write_level(oc_log_ctx_t *ctx, const oc_log_level ll, const char *msg)
 {
- if(!ctx)
- {
-     return 0;
- }
+ if(0 == ctx)
+  return 0;
 
- ctx->log_level = loglevel;
+ ctx->log_level = ll;
 
  /* Notify: */
- return ctx->write_level(ctx, loglevel, msg);
+ return ctx->write_level(ctx, ll, msg);
 }
 
 int oc_log_set_module(oc_log_ctx_t *ctx, const char *module_name)
 {
- char *mn = NULL;
- size_t len = 0;
+ char *mn;
+ size_t l;
 
- if(!ctx || !module_name)
- {
-     return 0;
- }
+ if(0 == ctx)
+  return 0;
 
  /* Swap pointers so that module data's not erased in the event of failure: */
- len = strlen(module_name);
+ l = strlen(module_name);
 
- mn = (char *)malloc(1 + len);
+ mn = (char *)malloc(1 + l);
 
- if(!mn)
- {
-     return 0;
- }
+ if(0 == mn)
+  return 0;
 
- memcpy(mn, module_name, 1 + len);
+ memcpy(mn, module_name, 1 + l);
 
- if(!ctx->module_name)
- {
-     free(ctx->module_name);
- }
+ if(0 != ctx->module_name)
+  free(ctx->module_name);
 
  ctx->module_name = mn;
 
  /* Notify: */
  return ctx->set_module(ctx, ctx->module_name);
 }
-
 

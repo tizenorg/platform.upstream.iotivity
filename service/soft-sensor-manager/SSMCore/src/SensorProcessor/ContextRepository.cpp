@@ -18,7 +18,6 @@
 *
 ******************************************************************/
 #include "ContextRepository.h"
-#include "rapidxml/rapidxml.hpp"
 
 static inline std::string trim_both(const std::string &str)
 {
@@ -56,17 +55,7 @@ CLEANUP:
     return res;
 }
 
-SSMRESULT CContextRepository::stopResourceFinder()
-{
-    SSMRESULT res = SSM_E_FAIL;
-
-    SSM_CLEANUP_ASSERT(m_resourceFinder->stopResourceFinder());
-
-CLEANUP:
-    return res;
-}
-
-SSMRESULT CContextRepository::registerResourceFinderEvent(IResourceEvent *pResourceEvent)
+SSMRESULT CContextRepository::registerResourceFinderEvent(IN IResourceEvent *pResourceEvent)
 {
     m_resourceEvents.push_back(pResourceEvent);
     return SSM_S_OK;
@@ -76,8 +65,8 @@ void CContextRepository::finalRelease()
 {
 }
 
-SSMRESULT CContextRepository::initRepository(std::string name, std::string type,
-        std::string pathSoftSensors, std::string pathDescription)
+SSMRESULT CContextRepository::initRepository(IN std::string name, IN std::string type,
+        IN std::string pathSoftSensors, IN std::string pathDescription)
 {
     SSMRESULT res = SSM_E_FAIL;
 
@@ -88,7 +77,7 @@ SSMRESULT CContextRepository::initRepository(std::string name, std::string type,
 
     if (pathSoftSensors.length() == 0)
     {
-        SSM_CLEANUP_ASSERT(getCurrentPath(&m_pathSoftSensors));
+        SSM_CLEANUP_ASSERT(GetCurrentPath(&m_pathSoftSensors));
         m_pathSoftSensors.append("/");
     }
     else
@@ -98,7 +87,7 @@ SSMRESULT CContextRepository::initRepository(std::string name, std::string type,
 
     if (pathDescription.length() == 0)
     {
-        SSM_CLEANUP_ASSERT(getCurrentPath(&m_pathSoftSensorsDescription));
+        SSM_CLEANUP_ASSERT(GetCurrentPath(&m_pathSoftSensorsDescription));
         m_pathSoftSensorsDescription.append("/");
         m_pathSoftSensorsDescription.append(DEFAULT_PATH_SOFT_SENSORS);
     }
@@ -119,9 +108,10 @@ SSMRESULT CContextRepository::loadXMLFromString(char *xmlData,
         std::vector<DictionaryData> *dataList)
 {
     // use  rapidxml-----------------------
-    SSMRESULT res = SSM_E_INVALIDXML;
+    SSMRESULT res = SSM_E_FAIL;
     rapidxml::xml_document< char > xmlDoc;
     //xmlDoc.parse< 0 >( &xmlData.front() );
+    xmlDoc.parse< 0 >(xmlData);
 
     std::string keyStr;
     std::string valueStr;
@@ -131,84 +121,73 @@ SSMRESULT CContextRepository::loadXMLFromString(char *xmlData,
     rapidxml::xml_node< char > *subItem2;
     rapidxml::xml_node< char > *subItem3;
 
-    rapidxml::xml_node< char > *root;
+    // get value
+    rapidxml::xml_node< char > *root = xmlDoc.first_node();
 
-    try
+    if (!root)
     {
-        xmlDoc.parse< 0 >(xmlData);
+        SSM_CLEANUP_ASSERT(SSM_E_FAIL);
+    }
 
-        // get value
-        root = xmlDoc.first_node();
-
-        if (!root)
+    for ( item = root->first_node(); item; item = item->next_sibling() )
+    {
+        DictionaryData dictionaryData;
+        for ( subItem = item->first_node(); subItem ; subItem = subItem->next_sibling() )
         {
-            throw rapidxml::parse_error("No Root Element", 0);
-        }
+            //root name
+            keyStr = subItem->name();  // key
+            valueStr = subItem->value();   // value
 
-        for (item = root->first_node(); item; item = item->next_sibling())
-        {
-            DictionaryData dictionaryData;
-            for (subItem = item->first_node(); subItem; subItem = subItem->next_sibling())
+            if (!keyStr.compare("name"))
             {
-                //root name
-                keyStr = subItem->name();  // key
-                valueStr = subItem->value();   // value
+                dictionaryData.rootName = trim_both(valueStr);
+            }
+            ////std::cout<<keyStr << " : " << subItem->value() <<std::endl<<std::endl; //root_name
+            for (subItem2 = subItem->first_node(); subItem2 ; subItem2 = subItem2->next_sibling())
+            {
+                std::map<std::string, std::string> propertyMap;
+                std::vector<std::string> enterconditionVector;
 
-                if (!keyStr.compare("name"))
+                keyStr = subItem2->name();  // key
+                valueStr = subItem2->value();   // value
+
+                if (!keyStr.compare("input"))
                 {
-                    dictionaryData.rootName = trim_both(valueStr);
+                    dictionaryData.inputs.push_back(trim_both(valueStr));
                 }
-                ////std::cout<<keyStr << " : " << subItem->value() <<std::endl<<std::endl; //root_name
-                for (subItem2 = subItem->first_node(); subItem2; subItem2 = subItem2->next_sibling())
+                ////std::cout<<name << " :: " << subItem2->value() <<std::endl<<std::endl;
+                for (subItem3 = subItem2->first_node(); subItem3 ; subItem3 = subItem3->next_sibling())
                 {
-                    std::map<std::string, std::string> propertyMap;
-                    std::vector<std::string> enterconditionVector;
+                    std::string newKeyStr = subItem3->name();  // key
+                    valueStr = subItem3->value();   // value
 
-                    keyStr = subItem2->name();  // key
-                    valueStr = subItem2->value();   // value
-
-                    if (!keyStr.compare("input"))
+                    if (!keyStr.compare("attribute") || !keyStr.compare("output") )
                     {
-                        dictionaryData.inputs.push_back(trim_both(valueStr));
+                        propertyMap.insert(std::make_pair(trim_both(newKeyStr), trim_both(valueStr)));
                     }
-                    ////std::cout<<name << " :: " << subItem2->value() <<std::endl<<std::endl;
-                    for (subItem3 = subItem2->first_node(); subItem3; subItem3 = subItem3->next_sibling())
-                    {
-                        std::string newKeyStr = subItem3->name();  // key
-                        valueStr = subItem3->value();   // value
-
-                        if (!keyStr.compare("attribute") || !keyStr.compare("output"))
-                        {
-                            propertyMap.insert(std::make_pair(trim_both(newKeyStr), trim_both(valueStr)));
-                        }
-                    }
-                    if (!keyStr.compare("attribute"))
-                    {
-                        dictionaryData.attributeProperty.push_back(propertyMap);
-                    }
-                    else if (!keyStr.compare("output"))
-                    {
-                        dictionaryData.outputProperty.push_back(propertyMap);
-                    }
+                }
+                if (!keyStr.compare("attribute"))
+                {
+                    dictionaryData.attributeProperty.push_back(propertyMap);
+                }
+                else if (!keyStr.compare("output"))
+                {
+                    dictionaryData.outputProperty.push_back(propertyMap);
                 }
             }
-            //for accurate data.
-            /*
-            dictionaryData.app_input_count = std::to_string((long long)dictionaryData.app_inputs.size());
-            dictionaryData.input_count = std::to_string((long long)dictionaryData.inputs.size());
-            dictionaryData.attribute_property_count = std::to_string((long long)dictionaryData.attribute_property.size());
-            dictionaryData.output_property_count = std::to_string((long long)dictionaryData.output_property.size());
-            */
-
-            dataList->push_back(dictionaryData);
         }
+        //for accurate data.
+        /*
+        dictionaryData.app_input_count = std::to_string((long long)dictionaryData.app_inputs.size());
+        dictionaryData.input_count = std::to_string((long long)dictionaryData.inputs.size());
+        dictionaryData.attribute_property_count = std::to_string((long long)dictionaryData.attribute_property.size());
+        dictionaryData.output_property_count = std::to_string((long long)dictionaryData.output_property.size());
+        */
 
-        res = SSM_S_OK;
+        dataList->push_back(dictionaryData);
     }
-    catch (rapidxml::parse_error &e)
-    {
-        SSM_CLEANUP_ASSERT(SSM_E_INVALIDXML);
-    }
+
+    res = SSM_S_OK;
 
 CLEANUP:
     return res;
@@ -244,7 +223,7 @@ CLEANUP:
     return res;
 }
 
-SSMRESULT CContextRepository::getSoftSensorList(std::vector<ISSMResource *> *pSoftSensorList)
+SSMRESULT CContextRepository::getSoftSensorList(OUT std::vector<ISSMResource *> *pSoftSensorList)
 {
     for (size_t i = 0; i < m_lstSoftSensor.size(); i++)
     {
@@ -254,7 +233,7 @@ SSMRESULT CContextRepository::getSoftSensorList(std::vector<ISSMResource *> *pSo
     return SSM_S_OK;
 }
 
-SSMRESULT CContextRepository::getPrimitiveSensorList(std::vector<ISSMResource *>
+SSMRESULT CContextRepository::getPrimitiveSensorList(OUT std::vector<ISSMResource *>
         *pPrimitiveSensorList)
 {
     for (size_t i = 0; i < m_lstPrimitiveSensor.size(); i++)
@@ -265,7 +244,7 @@ SSMRESULT CContextRepository::getPrimitiveSensorList(std::vector<ISSMResource *>
     return SSM_S_OK;
 }
 
-SSMRESULT CContextRepository::onResourceFound(ISSMResource *pSensor)
+SSMRESULT CContextRepository::onResourceFound(IN ISSMResource *pSensor)
 {
     m_lstPrimitiveSensor.push_back(pSensor);
 
@@ -277,7 +256,7 @@ SSMRESULT CContextRepository::onResourceFound(ISSMResource *pSensor)
     return SSM_S_OK;
 }
 
-SSMRESULT CContextRepository::onResourceLost(ISSMResource *pSensor)
+SSMRESULT CContextRepository::onResourceLost(IN ISSMResource *pSensor)
 {
     std::vector<ISSMResource *>::iterator    itor;
     itor = std::find(m_lstPrimitiveSensor.begin(), m_lstPrimitiveSensor.end(), pSensor);
@@ -291,12 +270,12 @@ SSMRESULT CContextRepository::onResourceLost(ISSMResource *pSensor)
     return SSM_E_FAIL;
 }
 
-SSMRESULT CContextRepository::startObserveResource(ISSMResource *pSensor, IEvent *pEvent)
+SSMRESULT CContextRepository::startObserveResource(IN ISSMResource *pSensor, IN IEvent *pEvent)
 {
     return m_resourceFinder->startObserveResource(pSensor, pEvent);
 }
 
-SSMRESULT CContextRepository::stopObserveResource(ISSMResource *pSensor)
+SSMRESULT CContextRepository::stopObserveResource(IN ISSMResource *pSensor)
 {
     return m_resourceFinder->stopObserveResource(pSensor);
 }
@@ -339,7 +318,7 @@ SSMRESULT CContextRepository::loadSoftSensor(std::string softSensorName, ICtxDel
     std::stringstream   sstream;
     SSMRESULT           res = SSM_E_FAIL;
 
-    typedef void(*InitContext)(ICtxDelegate *);
+    typedef void(*InitContext)(IN ICtxDelegate *);
     InitContext InitializeContextFunction = NULL;
 
     // load dll(so)
@@ -405,7 +384,7 @@ CLEANUP:
     return res;
 }
 
-SSMRESULT CContextRepository::getCurrentPath(std::string *path)
+SSMRESULT CContextRepository::GetCurrentPath(std::string *path)
 {
     char        buffer[2048];
     SSMRESULT   res = SSM_E_FAIL;

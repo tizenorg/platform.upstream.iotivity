@@ -37,15 +37,15 @@ CDataReader::~CDataReader()
     }
 }
 
-SSMRESULT CDataReader::addModelData(std::string modelName,
-                                    std::vector<CModelData *> *pModelData)
+SSMRESULT CDataReader::addModelData(IN std::string modelName,
+                                    IN std::vector<CModelData *> *pModelData)
 {
     m_modelDataList[modelName] = *pModelData;
 
     return SSM_S_OK;
 }
 
-SSMRESULT CDataReader::getAffectedModels(std::vector<std::string> *pAffectedModels)
+SSMRESULT CDataReader::getAffectedModels(OUT std::vector<std::string> *pAffectedModels)
 {
     for (std::map<std::string, std::vector<CModelData *> >::iterator itorModel =
              m_modelDataList.begin();
@@ -57,7 +57,7 @@ SSMRESULT CDataReader::getAffectedModels(std::vector<std::string> *pAffectedMode
     return SSM_S_OK;
 }
 
-SSMRESULT CDataReader::getModelDataCount(std::string modelName, int *pDataCount)
+SSMRESULT CDataReader::getModelDataCount(IN std::string modelName, OUT int *pDataCount)
 {
     std::map<std::string, std::vector<CModelData *> >::iterator itor;
 
@@ -73,8 +73,8 @@ SSMRESULT CDataReader::getModelDataCount(std::string modelName, int *pDataCount)
     return SSM_S_OK;
 }
 
-SSMRESULT CDataReader::getModelData(std::string modelName, int dataIndex,
-                                    IModelData **ppModelData)
+SSMRESULT CDataReader::getModelData(IN std::string modelName, IN int dataIndex,
+                                    OUT IModelData **ppModelData)
 {
     std::map<std::string, std::vector<CModelData *> >::iterator itor;
 

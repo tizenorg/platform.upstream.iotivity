@@ -33,10 +33,11 @@
 #include "OCApi.h"
 using namespace OC;
 
-
 class ClientWorker
 {
 private:
+    bool m_isFoo;
+    int m_barCount;
     void putResourceInfo(const HeaderOptions& headerOptions,
             const OCRepresentation rep, const OCRepresentation rep2, const int eCode)
     {
@@ -141,20 +142,13 @@ private:
     }
 
 public:
-    ClientWorker(OCConnectivityType ct):m_connectivityType{ct}
-    {}
-
     void start()
     {
-        std::ostringstream requestURI;
-        requestURI << OC_MULTICAST_DISCOVERY_URI << "?rt=core.foo";
-
         std::cout<<"Starting Client find:"<<std::endl;
         FindCallback f (std::bind(&ClientWorker::foundResource, this, std::placeholders::_1));
         std::cout<<"result:" <<
-        OCPlatform::findResource("", requestURI.str(), OC_ALL, f)
-        << std::endl;
-
+            OCPlatform::findResource("", "coap://224.0.1.187/oc/core?rt=core.foo", f)
+            << std::endl;
         std::cout<<"Finding Resource..."<<std::endl;
 
         {
@@ -167,9 +161,6 @@ private:
     std::mutex m_resourceLock;
     std::condition_variable m_cv;
     std::shared_ptr<OCResource> m_resource;
-    OCConnectivityType m_connectivityType;
-    bool m_isFoo;
-    int m_barCount;
 };
 
 struct FooResource
@@ -278,7 +269,11 @@ struct FooResource
             {
                 std::cout <<"\t\trequestFlag : UNSUPPORTED: ";
 
-                if(request->getRequestHandlerFlag()== RequestHandlerFlag::ObserverFlag)
+                if(request->getRequestHandlerFlag()==RequestHandlerFlag::InitFlag)
+                {
+                    std::cout<<"InitFlag"<<std::endl;
+                }
+                else if(request->getRequestHandlerFlag()== RequestHandlerFlag::ObserverFlag)
                 {
                     std::cout<<"ObserverFlag"<<std::endl;
                 }
@@ -294,54 +289,8 @@ struct FooResource
 
 };
 
-int main(int argc, char* argv[])
+int main()
 {
-    OCConnectivityType connectivityType = OC_IPV4;
-
-    if(argc == 2)
-    {
-        try
-        {
-            std::size_t inputValLen;
-            int optionSelected = std::stoi(argv[1], &inputValLen);
-
-            if(inputValLen == strlen(argv[1]))
-            {
-                if(optionSelected == 0)
-                {
-                    connectivityType = OC_IPV4;
-                }
-                else if(optionSelected == 1)
-                {
-                    // TODO: re-enable IPv4/IPv6 command line selection when IPv6 is supported
-                    // connectivityType = OC_IPV6;
-                    connectivityType = OC_IPV4;
-                    std::cout << "IPv6 not currently supported. Using default IPv4" << std::endl;
-                }
-                else
-                {
-                    std::cout << "Invalid connectivity type selected. Using default IPv4"
-                    << std::endl;
-                }
-            }
-            else
-            {
-                std::cout << "Invalid connectivity type selected. Using default IPv4" << std::endl;
-            }
-        }
-        catch(std::exception& )
-        {
-            std::cout << "Invalid input argument. Using IPv4 as connectivity type" << std::endl;
-        }
-    }
-    else
-    {
-        std::cout<< "Usage simpleclientserver <ConnectivityType(0|1)>" << std::endl;
-        std::cout<< "    ConnectivityType: Default IPv4" << std::endl;
-        std::cout << "   ConnectivityType : 0 - IPv4" << std::endl;
-        std::cout << "   ConnectivityType : 1 - IPv6 (not currently supported)" << std::endl;
-    }
-
     PlatformConfig cfg {
         OC::ServiceType::InProc,
         OC::ModeType::Both,
@@ -361,7 +310,7 @@ int main(int argc, char* argv[])
             return -1;
         }
 
-        ClientWorker cw(connectivityType);
+        ClientWorker cw;
         cw.start();
     }
     catch(OCException& e)
@@ -371,4 +320,3 @@ int main(int argc, char* argv[])
 
     return 0;
 }
-

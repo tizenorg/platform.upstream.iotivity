@@ -74,9 +74,8 @@ public:
 
 public:
     /// Constructor
-    RoomResource(): m_roomName("John's Room"), m_roomHandle(nullptr), m_lightState(false),
-                    m_lightColor(0),m_lightHandle(nullptr),  m_fanState(false), m_fanSpeed(0),
-                    m_fanHandle(nullptr)
+    RoomResource(): m_roomName("John's Room"), m_lightState(false),
+                    m_lightColor(0), m_fanState(false), m_fanSpeed(0)
     {
         m_lightUri = "/a/light"; // URI of the resource
         m_lightTypes.push_back("core.light"); // resource type name. In this case, it is light
@@ -290,7 +289,13 @@ bool prepareLightResponse(std::shared_ptr<OCResourceRequest> request)
         std::string requestType = request->getRequestType();
         int requestFlag = request->getRequestHandlerFlag();
 
-        if(requestFlag == RequestHandlerFlag::RequestFlag)
+        if(requestFlag == RequestHandlerFlag::InitFlag)
+        {
+            cout << "\t\trequestFlag : Init\n";
+
+            // entity handler to perform resource initialization operations
+        }
+        else if(requestFlag == RequestHandlerFlag::RequestFlag)
         {
             cout << "\t\trequestFlag : Request\n";
 
@@ -345,7 +350,13 @@ bool prepareFanResponse(std::shared_ptr<OCResourceRequest> request)
         std::string requestType = request->getRequestType();
         int requestFlag = request->getRequestHandlerFlag();
 
-        if(requestFlag == RequestHandlerFlag::RequestFlag)
+        if(requestFlag == RequestHandlerFlag::InitFlag)
+        {
+            cout << "\t\trequestFlag : Init\n";
+
+            // entity handler to perform resource initialization operations
+        }
+        else if(requestFlag == RequestHandlerFlag::RequestFlag)
         {
             cout << "\t\trequestFlag : Request\n";
 
@@ -400,7 +411,13 @@ OCEntityHandlerResult entityHandlerRoom(std::shared_ptr<OCResourceRequest> reque
         std::string requestType = request->getRequestType();
         int requestFlag = request->getRequestHandlerFlag();
 
-        if(requestFlag == RequestHandlerFlag::RequestFlag)
+        if(requestFlag == RequestHandlerFlag::InitFlag)
+        {
+            cout << "\t\trequestFlag : Init\n";
+
+            // entity handler to perform resource initialization operations
+        }
+        else if(requestFlag == RequestHandlerFlag::RequestFlag)
         {
             cout << "\t\trequestFlag : Request\n";
 
@@ -575,7 +592,7 @@ int main(int argc, char* argv[])
         cv.wait(lock);
 
     }
-    catch(OCException &e)
+    catch(OCException e)
     {
         std::cout << "Exception in main: " << e.what();
     }
@@ -585,4 +602,3 @@ int main(int argc, char* argv[])
 
     return 0;
 }
-

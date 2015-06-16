@@ -89,8 +89,8 @@ CLEANUP:
     return;
 }
 
-void CContextModel::registerSSMResource(ActivationType activationType, int targetDeviceDataId,
-                                        ISSMResource *pSSMResource)
+void CContextModel::registerSSMResource(IN ActivationType activationType, IN int targetDeviceDataId,
+                                        IN ISSMResource *pSSMResource)
 {
     intptr_t     *pData = NULL;
 
@@ -136,8 +136,8 @@ void CContextModel::registerSSMResource(ActivationType activationType, int targe
     m_mtxActivationCount.unlock();
 }
 
-void CContextModel::unregisterSSMResource(ActivationType activationType,
-        int targetDeviceDataId, ISSMResource *pSSMResource)
+void CContextModel::unregisterSSMResource(IN ActivationType activationType,
+        IN int targetDeviceDataId, IN ISSMResource *pSSMResource)
 {
     intptr_t     *pData = NULL;
 
@@ -177,8 +177,8 @@ void CContextModel::unregisterSSMResource(ActivationType activationType,
     m_mtxActivationCount.unlock();
 }
 
-SSMRESULT CContextModel::create(ConstructionType constructionType,
-                                IContextModel *pParentModel, std::string modelName, ModelPropertyVec *pModelProperties)
+SSMRESULT CContextModel::create(IN ConstructionType constructionType,
+                                IN IContextModel *pParentModel, IN std::string modelName, IN ModelPropertyVec *pModelProperties)
 {
     SSMRESULT res = SSM_E_FAIL;
     int         modelId = 1;
@@ -205,13 +205,13 @@ CLEANUP:
     return res;
 }
 
-SSMRESULT CContextModel::registerContextModelEvent(IContextModelEvent *pContextModelEvent)
+SSMRESULT CContextModel::registerContextModelEvent(IN IContextModelEvent *pContextModelEvent)
 {
     m_pContextModelEvent = pContextModelEvent;
     return SSM_S_OK;
 }
 
-void CContextModel::onExecute(void *pArg)
+void CContextModel::onExecute(IN void *pArg)
 {
     intptr_t *pData = (intptr_t *)pArg;
 
@@ -221,15 +221,15 @@ void CContextModel::onExecute(void *pArg)
     }
 }
 
-void CContextModel::onTerminate(void *pArg)
+void CContextModel::onTerminate(IN void *pArg)
 {
     intptr_t *pData = (intptr_t *)pArg;
     SAFE_ARRAY_DELETE(pData);
 }
 
 //TODO: called when new data arrived
-int CContextModel::onEvent(std::string deviceID, TypeofEvent callType,
-                           std::vector<ContextData> ctxData)
+int CContextModel::onEvent(IN std::string deviceID, IN TypeofEvent callType,
+                           IN std::vector<ContextData> ctxData)
 {
     SSMRESULT           res = SSM_E_FAIL;
     int                 dataId = 0;
@@ -337,21 +337,21 @@ IContextModel::ConstructionType CContextModel::getConstructionType()
     return m_constructionType;
 }
 
-SSMRESULT CContextModel::getParentDataId(int dataId, IContextModel *pParentModel,
-        int *pParentDataId)
+SSMRESULT CContextModel::getParentDataId(IN int dataId, IN IContextModel *pParentModel,
+        OUT int *pParentDataId)
 {
     return m_pEvaluationEngine->getParentDataId(m_modelId, dataId, pParentModel->getModelId(),
             pParentDataId);
 }
 
-SSMRESULT CContextModel::getChildDataId(int dataId, IContextModel *pChildModel,
-                                        IntVec *pChildDataIds)
+SSMRESULT CContextModel::getChildDataId(IN int dataId, IN IContextModel *pChildModel,
+                                        OUT IntVec *pChildDataIds)
 {
     return m_pEvaluationEngine->getChildDataId(m_modelId, dataId, pChildModel->getModelId(),
             pChildDataIds);
 }
 
-SSMRESULT CContextModel::activate(ActivationType activationType, int targetDeviceDataId)
+SSMRESULT CContextModel::activate(IN ActivationType activationType, IN int targetDeviceDataId)
 {
     if (targetDeviceDataId < 0 && activationType == ACTIVATION_TYPE_SUBSCRIBE)
     {
@@ -377,7 +377,7 @@ SSMRESULT CContextModel::activate(ActivationType activationType, int targetDevic
     return SSM_S_OK;
 }
 
-SSMRESULT CContextModel::deactivate(ActivationType activationType, int targetDeviceDataId)
+SSMRESULT CContextModel::deactivate(IN ActivationType activationType, IN int targetDeviceDataId)
 {
     if (targetDeviceDataId < 0 && activationType == ACTIVATION_TYPE_SUBSCRIBE)
     {
@@ -403,29 +403,29 @@ SSMRESULT CContextModel::deactivate(ActivationType activationType, int targetDev
     return SSM_S_OK;
 }
 /*
-SSMRESULT CContextModel::GetModelSchema(ModelPropertyVec *pModelProperties)
+SSMRESULT CContextModel::GetModelSchema(OUT ModelPropertyVec *pModelProperties)
 {
     return m_pEvaluationEngine->GetModelSchema(m_ModelId, pModelProperties);
 }
 */
-SSMRESULT CContextModel::addModelData(int parentDataId, ModelPropertyVec *pData,
-                                      int *pDataId)
+SSMRESULT CContextModel::addModelData(IN int parentDataId, IN ModelPropertyVec *pData,
+                                      OUT int *pDataId)
 {
     return m_pEvaluationEngine->addModelData(m_modelId, m_pParentModel->getModelId(), parentDataId,
             pData, pDataId);
 }
 
-SSMRESULT CContextModel::updateModelData(int dataId, ModelPropertyVec *pData)
+SSMRESULT CContextModel::updateModelData(IN int dataId, IN ModelPropertyVec *pData)
 {
     return m_pEvaluationEngine->updateModelData(m_modelId, dataId, pData);
 }
 
-SSMRESULT CContextModel::deleteModelData(int dataId)
+SSMRESULT CContextModel::deleteModelData(IN int dataId)
 {
     return m_pEvaluationEngine->deleteModelData(m_modelId, dataId);
 }
 
-SSMRESULT CContextModel::getModelData(int dataId, ModelPropertyVec *pData)
+SSMRESULT CContextModel::getModelData(IN int dataId, OUT ModelPropertyVec *pData)
 {
     SSMRESULT res = SSM_E_FAIL;
     int     i = 0;
@@ -440,8 +440,8 @@ CLEANUP:
     return res;
 }
 
-SSMRESULT CContextModel::getModelDataSet(int startIndex, int count,
-        std::vector<ModelPropertyVec> *pDataSet, int *pLastIndex)
+SSMRESULT CContextModel::getModelDataSet(IN int startIndex, IN int count,
+        OUT std::vector<ModelPropertyVec> *pDataSet, OUT int *pLastIndex)
 {
     SSMRESULT res = SSM_E_FAIL;
     int     i;
@@ -464,8 +464,8 @@ CLEANUP:
     return res;
 }
 
-SSMRESULT CContextModel::createConditionedModel(ModelConditionVec *pModelConditionVec,
-        IConditionedModel **ppConditionedModel)
+SSMRESULT CContextModel::createConditionedModel(IN ModelConditionVec *pModelConditionVec,
+        OUT IConditionedModel **ppConditionedModel)
 {
     SSMRESULT res = SSM_E_FAIL;
     CObject<CConditionedModel>                  *pConditionedModel;
@@ -501,8 +501,8 @@ CLEANUP:
 */
 
 //Called new install or re install
-void CContextModel::addSSMResourceAndDeviceDataId(std::string deviceId, int deviceDataId,
-        ISSMResource *pSSMResource)
+void CContextModel::addSSMResourceAndDeviceDataId(IN std::string deviceId, IN int deviceDataId,
+        IN ISSMResource *pSSMResource)
 {
     if (deviceDataId == 1)
     {

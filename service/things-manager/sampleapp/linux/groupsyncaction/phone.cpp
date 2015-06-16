@@ -98,6 +98,7 @@ void onGetChild(const HeaderOptions& headerOptions, const OCRepresentation& rep,
         std::string resourceURI;
 
         QueryParamsMap query;
+        OCRepresentation rep;
         std::string playStart;
         std::string playStop;
 
@@ -248,9 +249,7 @@ int main(int argc, char* argv[])
                 std::string resourceInterface = DEFAULT_INTERFACE;
 
                 result = OCPlatform::registerResource(gPhoneResourceHandle, resourceURi,
-                        resourceTypeName, resourceInterface,
-                        NULL, OC_DISCOVERABLE | OC_OBSERVABLE);
-
+                        resourceTypeName, resourceInterface, NULL, OC_DISCOVERABLE | OC_OBSERVABLE);
                 if (OC_STACK_OK == result)
                 {
                     cout << "To register phone resource was successful\n";
@@ -434,7 +433,7 @@ int main(int argc, char* argv[])
                     continue;
                 }
 
-                result = gThingManager->leaveGroup(gFindGroup, collectionResourceType,  gPhoneResourceHandle);
+                result = gThingManager->leaveGroup(collectionResourceType, gPhoneResourceHandle);
                 if (OC_STACK_OK == result)
                 {
                     cout << "Leaving group was successful\n";
@@ -471,7 +470,7 @@ int main(int argc, char* argv[])
     }
     catch (OCException& e)
     {
-        std::cout << "Exception: " << e.what() << std::endl;
+        //log(e.what());
     }
 
     return 0;

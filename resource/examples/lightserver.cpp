@@ -52,7 +52,7 @@ bool isSlowResponse = false;
 // Forward declaring the entityHandler
 
 /// This class represents a single resource named 'lightResource'. This resource has
-/// one simple attribute, power
+/// two simple properties named 'state' and 'power'
 
 class LightResource
 {
@@ -176,6 +176,12 @@ OCEntityHandlerResult entityHandler(std::shared_ptr<OCResourceRequest> request)
         std::string requestType = request->getRequestType();
         int requestFlag = request->getRequestHandlerFlag();
 
+        if(requestFlag & RequestHandlerFlag::InitFlag)
+        {
+            cout << "\t\trequestFlag : Init\n";
+
+            // entity handler to perform resource initialization operations
+        }
         if(requestFlag & RequestHandlerFlag::RequestFlag)
         {
             cout << "\t\trequestFlag : Request\n";
@@ -305,7 +311,7 @@ int main(int argc, char* argv[])
         myLight.createResource();
 
         myLight.addType(std::string("core.brightlight"));
-        myLight.addInterface(std::string(LINK_INTERFACE));
+        myLight.addInterface(std::string("oc.mi.ll"));
 
         // A condition variable will free the mutex it is given, then do a non-
         // intensive block until 'notify' is called on it.  In this case, since we
@@ -316,9 +322,9 @@ int main(int argc, char* argv[])
         std::unique_lock<std::mutex> lock(blocker);
         cv.wait(lock);
     }
-    catch(OCException& e)
+    catch(OCException e)
     {
-       oclog() << "Exception in main: "<< e.what();
+        //log(e.what());
     }
 
     // No explicit call to stop the platform.
@@ -326,4 +332,3 @@ int main(int argc, char* argv[])
 
     return 0;
 }
-

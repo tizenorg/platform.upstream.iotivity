@@ -27,17 +27,14 @@
 
 #define TAG PCF("CA")
 
-static CANetworkPacketReceivedCallback g_edrReceivedCallback = NULL;
-static ca_thread_pool_t g_threadPoolHandle = NULL;
+static CANetworkPacketReceivedCallback gEDRReceivedCallback = NULL;
 
 CAResult_t CAInitializeEDR(CARegisterConnectivityCallback registerCallback,
-        CANetworkPacketReceivedCallback reqRespCallback, CANetworkChangeCallback netCallback,
-        ca_thread_pool_t handle)
+        CANetworkPacketReceivedCallback reqRespCallback, CANetworkChangeCallback netCallback)
 {
-    OIC_LOG(DEBUG, TAG, "CAInitializeEDR");
+    OIC_LOG_V(DEBUG, TAG, "CAInitializeEDR");
 
-    g_edrReceivedCallback = reqRespCallback;
-    g_threadPoolHandle = handle;
+    gEDRReceivedCallback = reqRespCallback;
 
     // register handlers
     CAConnectivityHandler_t handler;
@@ -45,9 +42,11 @@ CAResult_t CAInitializeEDR(CARegisterConnectivityCallback registerCallback,
 
     handler.startAdapter = CAStartEDR;
     handler.startListenServer = CAStartEDRListeningServer;
-    handler.startDiscoveryServer = CAStartEDRDiscoveryServer;
+    handler.startDiscoverServer = CAStartEDRDiscoveryServer;
     handler.sendData = CASendEDRUnicastData;
     handler.sendDataToAll = CASendEDRMulticastData;
+    handler.startNotifyServer = CAStartEDRNotifyServer;
+    handler.sendNotification = CASendEDRNotification;
     handler.GetnetInfo = CAGetEDRInterfaceInformation;
     handler.readData = CAReadEDRData;
     handler.stopAdapter = CAStopEDR;
@@ -60,63 +59,75 @@ CAResult_t CAInitializeEDR(CARegisterConnectivityCallback registerCallback,
 
 CAResult_t CAStartEDR()
 {
-    OIC_LOG(DEBUG, TAG, "CAStartEDR");
+    OIC_LOG_V(DEBUG, TAG, "CAStartEDR");
 
     return CA_STATUS_OK;
 }
 
 CAResult_t CAStartEDRListeningServer()
 {
-    OIC_LOG(DEBUG, TAG, "CAStartEDRListeningServer");
+    OIC_LOG_V(DEBUG, TAG, "CAStartEDRListeningServer");
 
     return CA_STATUS_OK;
 }
 
 CAResult_t CAStartEDRDiscoveryServer()
 {
-    OIC_LOG(DEBUG, TAG, "CAStartEDRDiscoveryServer");
+    OIC_LOG_V(DEBUG, TAG, "CAStartEDRDiscoveryServer");
 
     return CA_STATUS_OK;
 }
 
-int32_t CASendEDRUnicastData(const CARemoteEndpoint_t *endpoint, const void *data,
-    uint32_t dataLen)
+uint32_t CASendEDRUnicastData(const CARemoteEndpoint_t* endpoint, void* data, uint32_t dataLen)
 {
-    OIC_LOG(DEBUG, TAG, "CASendEDRUnicastData");
+    OIC_LOG_V(DEBUG, TAG, "CASendEDRUnicastData");
 
-    return -1;
+    return 0;
 }
 
-int32_t CASendEDRMulticastData(const void *data, uint32_t dataLen)
+uint32_t CASendEDRMulticastData(void* data, uint32_t dataLen)
 {
-    OIC_LOG(DEBUG, TAG, "CASendEDRMulticastData");
+    OIC_LOG_V(DEBUG, TAG, "CASendEDRMulticastData");
 
-    return -1;
+    return 0;
 }
 
-CAResult_t CAGetEDRInterfaceInformation(CALocalConnectivity_t **info, uint32_t *size)
+CAResult_t CAStartEDRNotifyServer()
 {
-    OIC_LOG(DEBUG, TAG, "CAGetEDRInterfaceInformation");
+    OIC_LOG_V(DEBUG, TAG, "CAStartEDRNotifyServer");
+
+    return CA_STATUS_OK;
+}
+
+uint32_t CASendEDRNotification(const CARemoteEndpoint_t* endpoint, void* data, uint32_t dataLen)
+{
+    OIC_LOG_V(DEBUG, TAG, "CASendEDRNotification");
+
+    return 0;
+}
+
+CAResult_t CAGetEDRInterfaceInformation(CALocalConnectivityt_t** info, uint32_t* size)
+{
+    OIC_LOG_V(DEBUG, TAG, "CAGetEDRInterfaceInformation");
 
     return CA_STATUS_OK;
 }
 
 CAResult_t CAReadEDRData()
 {
-    OIC_LOG(DEBUG, TAG, "Read EDR Data");
+    OIC_LOG_V(DEBUG, TAG, "Read EDR Data");
 
     return CA_STATUS_OK;
 }
 
 CAResult_t CAStopEDR()
 {
-    OIC_LOG(DEBUG, TAG, "CAStopEDR");
+    OIC_LOG_V(DEBUG, TAG, "CAStopEDR");
 
     return CA_STATUS_OK;
 }
 
 void CATerminateEDR()
 {
-    OIC_LOG(DEBUG, TAG, "CATerminateEDR");
+    OIC_LOG_V(DEBUG, TAG, "CATerminateEDR");
 }
-

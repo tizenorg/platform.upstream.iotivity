@@ -25,161 +25,164 @@
 #include "cainterface.h"
 #include "caremotehandler.h"
 #include "camessagehandler.h"
-#include "caprotocolmessage.h"
 #include "canetworkconfigurator.h"
 #include "cainterfacecontroller.h"
 #include "logger.h"
 
 #define TAG PCF("CA")
 
-#ifdef __WITH_DTLS__
-// CAAdapterNetDTLS will register the callback.
-// Taking callback all the way through adapters not the right approach, hence calling here.
-extern void CADTLSSetCredentialsCallback(CAGetDTLSCredentialsHandler credCallback);
-#endif
+static void CAMessageHandler(int32_t id, CADetachErrorCode code)
+{
+}
 
 CAResult_t CAInitialize()
 {
-    OIC_LOG(DEBUG, TAG, "CAInitialize");
+    OIC_LOG_V(DEBUG, TAG, "CAInitialize");
 
-    return CAInitializeMessageHandler();;
+    CASetMessageHandlerCallback(CAMessageHandler);
+
+    CAResult_t res = CAInitializeMessageHandler();
+
+    if (res != CA_STATUS_OK)
+    {
+        return res;
+    }
+
+    return CA_STATUS_OK;
 }
 
 void CATerminate()
 {
-    OIC_LOG(DEBUG, TAG, "CATerminate");
+    OIC_LOG_V(DEBUG, TAG, "CATerminate");
 
     CATerminateMessageHandler();
-
-    CATerminateNetworkType();
 }
 
 CAResult_t CAStartListeningServer()
 {
-    OIC_LOG(DEBUG, TAG, "CAStartListeningServer");
+    OIC_LOG_V(DEBUG, TAG, "CAStartListeningServer");
 
     return CAStartListeningServerAdapters();
 }
 
 CAResult_t CAStartDiscoveryServer()
 {
-    OIC_LOG(DEBUG, TAG, "CAStartDiscoveryServer");
+    OIC_LOG_V(DEBUG, TAG, "CAStartDiscoveryServer");
 
     return CAStartDiscoveryServerAdapters();
 }
 
-void CARegisterHandler(CARequestCallback ReqHandler, CAResponseCallback RespHandler)
+CAResult_t CARegisterHandler(CARequestCallback ReqHandler, CAResponseCallback RespHandler)
 {
-    OIC_LOG(DEBUG, TAG, "CARegisterHandler");
+    OIC_LOG_V(DEBUG, TAG, "CARegisterHandler");
 
     CASetRequestResponseCallbacks(ReqHandler, RespHandler);
-}
 
-#ifdef __WITH_DTLS__
-CAResult_t CARegisterDTLSCredentialsHandler(
-                                             CAGetDTLSCredentialsHandler GetDTLSCredentialsHandler)
-{
-    OIC_LOG(DEBUG, TAG, "CARegisterDTLSCredentialsHandler");
-    CADTLSSetCredentialsCallback(GetDTLSCredentialsHandler);
     return CA_STATUS_OK;
 }
-#endif //__WITH_DTLS__
 
-CAResult_t CACreateRemoteEndpoint(const CAURI_t uri, const CATransportType_t transportType,
-                                  CARemoteEndpoint_t **remoteEndpoint)
+CAResult_t CACreateRemoteEndpoint(const CAURI_t uri, CARemoteEndpoint_t** remoteEndpoint)
 {
-    OIC_LOG(DEBUG, TAG, "CACreateRemoteEndpoint");
+    OIC_LOG_V(DEBUG, TAG, "CACreateRemoteEndpoint");
 
-    CARemoteEndpoint_t *remote = CACreateRemoteEndpointUriInternal(uri, transportType);
-
-    if (remote == NULL)
-    {
-        OIC_LOG(DEBUG, TAG, "remote is NULL!");
-        return CA_STATUS_FAILED;
-    }
+    CARemoteEndpoint_t* remote = CACreateRemoteEndpointUriInternal(uri);
 
     *remoteEndpoint = remote;
 
+    if (remote == NULL)
+        return CA_STATUS_FAILED;
+
     return CA_STATUS_OK;
 }
 
-void CADestroyRemoteEndpoint(CARemoteEndpoint_t *rep)
+void CADestroyRemoteEndpoint(CARemoteEndpoint_t* rep)
 {
-    OIC_LOG(DEBUG, TAG, "CADestroyRemoteEndpoint");
+    OIC_LOG_V(DEBUG, TAG, "CADestroyRemoteEndpoint");
 
     CADestroyRemoteEndpointInternal(rep);
 }
 
-CAResult_t CAGenerateToken(CAToken_t *token, uint8_t tokenLength)
+CAResult_t CAGenerateToken(CAToken_t* token)
 {
-    OIC_LOG(DEBUG, TAG, "CAGenerateToken");
+    OIC_LOG_V(DEBUG, TAG, "CAGenerateToken");
 
-    return CAGenerateTokenInternal(token, tokenLength);
+    return CAGenerateTokenInternal(token);
 }
 
 void CADestroyToken(CAToken_t token)
 {
-    OIC_LOG(DEBUG, TAG, "CADestroyToken");
+    OIC_LOG_V(DEBUG, TAG, "CADestroyToken");
 
     CADestroyTokenInternal(token);
 }
 
-CAResult_t CAGetNetworkInformation(CALocalConnectivity_t **info, uint32_t *size)
+CAResult_t CAGetNetworkInformation(CALocalConnectivityt_t **info, uint32_t* size)
 {
-    OIC_LOG(DEBUG, TAG, "CAGetNetworkInformation");
+    OIC_LOG_V(DEBUG, TAG, "CAGetNetworkInformation");
 
-    return CAGetNetworkInformationInternal(info, size);
+    return CA_NOT_SUPPORTED;
 }
 
-CAResult_t CAFindResource(const CAURI_t resourceUri, const CAToken_t token, uint8_t tokenLength)
+CAResult_t CAFindResource(const CAURI_t resourceUri)
 {
-    OIC_LOG(DEBUG, TAG, "CAFindResource");
+    OIC_LOG_V(DEBUG, TAG, "CAFindResource");
 
-    return CADetachMessageResourceUri(resourceUri, token, tokenLength, NULL, 0);
+    int32_t actionId = -1;
 
+    actionId = CADetachMessageResourceUri(resourceUri);
+
+    if (actionId == -1)
+        return CA_SEND_FAILED;
+
+    OIC_LOG_V(DEBUG, TAG, "action id : %d", actionId);
+
+    return CA_STATUS_OK;
 }
 
-CAResult_t CASendRequest(const CARemoteEndpoint_t *object,const CARequestInfo_t *requestInfo)
+CAResult_t CASendRequest(const CARemoteEndpoint_t* object, CARequestInfo_t* requestInfo)
 {
-    OIC_LOG(DEBUG, TAG, "CASendGetRequest");
+    OIC_LOG_V(DEBUG, TAG, "CASendGetRequest");
 
-    return CADetachRequestMessage(object, requestInfo);
+    int32_t actionId = -1;
+
+    actionId = CADetachRequestMessage(object, requestInfo);
+
+    if (actionId == -1)
+        return CA_SEND_FAILED;
+
+    OIC_LOG_V(DEBUG, TAG, "action id : %d", actionId);
+
+    return CA_STATUS_OK;
 }
 
-CAResult_t CASendRequestToAll(const CAGroupEndpoint_t *object,
-                              const CARequestInfo_t *requestInfo)
+CAResult_t CASendNotification(const CARemoteEndpoint_t* object, CAResponseInfo_t* responseInfo)
 {
-    OIC_LOG(DEBUG, TAG, "CASendRequestToAll");
+    OIC_LOG_V(DEBUG, TAG, "CASendNotification");
 
-    return CADetachRequestToAllMessage(object, requestInfo);
+    return CA_NOT_SUPPORTED;
 }
 
-CAResult_t CASendNotification(const CARemoteEndpoint_t *object,
-    const CAResponseInfo_t *responseInfo)
+CAResult_t CASendResponse(const CARemoteEndpoint_t* object, CAResponseInfo_t* responseInfo)
 {
-    OIC_LOG(DEBUG, TAG, "CASendNotification");
+    OIC_LOG_V(DEBUG, TAG, "CASendResponse");
 
-    return CADetachResponseMessage(object, responseInfo);
+    int32_t actionId = -1;
 
+    actionId = CADetachResponseMessage(object, responseInfo);
+
+    if (actionId == -1)
+        return CA_SEND_FAILED;
+
+    OIC_LOG_V(DEBUG, TAG, "action id : %d", actionId);
+
+    return CA_STATUS_OK;
 }
 
-CAResult_t CASendResponse(const CARemoteEndpoint_t *object,
-    const CAResponseInfo_t *responseInfo)
+CAResult_t CAAdvertiseResource(const CAURI_t uri, CAHeaderOption_t* options, uint8_t numOptions)
 {
-    OIC_LOG(DEBUG, TAG, "CASendResponse");
+    OIC_LOG_V(DEBUG, TAG, "CAAdvertiseResource");
 
-    return CADetachResponseMessage(object, responseInfo);
-
-}
-
-CAResult_t CAAdvertiseResource(const CAURI_t resourceUri,const CAToken_t token,
-                               uint8_t tokenLength, const CAHeaderOption_t *options,
-                               const uint8_t numOptions)
-{
-    OIC_LOG(DEBUG, TAG, "CAAdvertiseResource");
-
-    return CADetachMessageResourceUri(resourceUri, token, tokenLength, options, numOptions);
-
+    return CA_NOT_SUPPORTED;
 }
 
 CAResult_t CASelectNetwork(const uint32_t interestedNetwork)
@@ -190,28 +193,45 @@ CAResult_t CASelectNetwork(const uint32_t interestedNetwork)
     {
         return CA_NOT_SUPPORTED;
     }
+    CAResult_t res;
 
-    CAResult_t res = CA_STATUS_OK;
-
-    if (interestedNetwork & CA_IPV4)
+    if (interestedNetwork & CA_ETHERNET)
     {
-        res = CAAddNetworkType(CA_IPV4);
-        OIC_LOG_V(ERROR, TAG, "CAAddNetworkType(CA_IPV4) function returns error : %d", res);
+        res = CAAddNetworkType(CA_ETHERNET);
+        if (res != CA_STATUS_OK)
+        {
+            return res;
+        }
+    }
+
+    if (interestedNetwork & CA_WIFI)
+    {
+        res = CAAddNetworkType(CA_WIFI);
+        if (res != CA_STATUS_OK)
+        {
+            return res;
+        }
     }
 
     if (interestedNetwork & CA_EDR)
     {
         res = CAAddNetworkType(CA_EDR);
-        OIC_LOG_V(ERROR, TAG, "CAAddNetworkType(CA_EDR) function returns error : %d", res);
+        if (res != CA_STATUS_OK)
+        {
+            return res;
+        }
     }
 
     if (interestedNetwork & CA_LE)
     {
         res = CAAddNetworkType(CA_LE);
-        OIC_LOG_V(ERROR, TAG, "CAAddNetworkType(CA_LE) function returns error : %d", res);
+        if (res != CA_STATUS_OK)
+        {
+            return res;
+        }
     }
 
-    return res;
+    return CA_STATUS_OK;
 }
 
 CAResult_t CAUnSelectNetwork(const uint32_t nonInterestedNetwork)
@@ -223,36 +243,53 @@ CAResult_t CAUnSelectNetwork(const uint32_t nonInterestedNetwork)
         return CA_NOT_SUPPORTED;
     }
 
-    CAResult_t res = CA_STATUS_OK;
+    CAResult_t res;
 
-    if (nonInterestedNetwork & CA_IPV4)
+    if (nonInterestedNetwork & CA_ETHERNET)
     {
-        res = CARemoveNetworkType(CA_IPV4);
-        OIC_LOG_V(ERROR, TAG, "CARemoveNetworkType(CA_IPV4) function returns error : %d", res);
+        res = CARemoveNetworkType(CA_ETHERNET);
+        if (res != CA_STATUS_OK)
+        {
+            return res;
+        }
+    }
+
+    if (nonInterestedNetwork & CA_WIFI)
+    {
+        res = CARemoveNetworkType(CA_WIFI);
+        if (res != CA_STATUS_OK)
+        {
+            return res;
+        }
     }
 
     if (nonInterestedNetwork & CA_EDR)
     {
         res = CARemoveNetworkType(CA_EDR);
-        OIC_LOG_V(ERROR, TAG, "CARemoveNetworkType(CA_EDR) function returns error : %d", res);
+        if (res != CA_STATUS_OK)
+        {
+            return res;
+        }
     }
 
     if (nonInterestedNetwork & CA_LE)
     {
         res = CARemoveNetworkType(CA_LE);
-        OIC_LOG_V(ERROR, TAG, "CARemoveNetworkType(CA_LE) function returns error : %d", res);
+        if (res != CA_STATUS_OK)
+        {
+            return res;
+        }
     }
 
-    return res;
+    return CA_STATUS_OK;
 }
 
 CAResult_t CAHandleRequestResponse()
 {
-    OIC_LOG(DEBUG, TAG, "CAHandleRequestResponse");
+    OIC_LOG_V(DEBUG, TAG, "CAHandleRequestResponse");
 
     CAHandleRequestResponseCallbacks();
 
     return CA_STATUS_OK;
 }
-
 

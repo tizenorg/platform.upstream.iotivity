@@ -21,8 +21,6 @@
 #include "OCResource.h"
 #include "OCUtilities.h"
 
-#include <boost/lexical_cast.hpp>
-
 namespace OC {
 
 using OC::nil_guard;
@@ -30,14 +28,9 @@ using OC::result_guard;
 using OC::checked_guard;
 
 OCResource::OCResource(std::weak_ptr<IClientWrapper> clientWrapper, const std::string& host,
-                       const std::string& uri, const std::string& serverId,
-                       OCConnectivityType connectivityType, bool observable,
-                       const std::vector<std::string>& resourceTypes,
+                       const std::string& uri, bool observable, const std::vector<std::string>& resourceTypes,
                        const std::vector<std::string>& interfaces)
- :  m_clientWrapper(clientWrapper), m_uri(uri), m_resourceId(serverId, m_uri),
-    m_host(host),
-    m_connectivityType(connectivityType),
-    m_isObservable(observable),
+ :  m_clientWrapper(clientWrapper), m_uri(uri), m_host(host), m_isObservable(observable),
     m_isCollection(false), m_resourceTypes(resourceTypes), m_interfaces(interfaces),
     m_observeHandle(nullptr)
 {
@@ -62,8 +55,7 @@ OCStackResult OCResource::get(const QueryParamsMap& queryParametersMap,
                               GetCallback attributeHandler, QualityOfService QoS)
 {
     return checked_guard(m_clientWrapper.lock(), &IClientWrapper::GetResourceRepresentation,
-                         m_host, m_uri, m_connectivityType, queryParametersMap, m_headerOptions,
-                         attributeHandler, QoS);
+                         m_host, m_uri, queryParametersMap, m_headerOptions, attributeHandler, QoS);
 }
 
 OCStackResult OCResource::get(const QueryParamsMap& queryParametersMap,
@@ -107,8 +99,7 @@ OCStackResult OCResource::put(const OCRepresentation& rep,
                               QualityOfService QoS)
 {
     return checked_guard(m_clientWrapper.lock(), &IClientWrapper::PutResourceRepresentation,
-                         m_host, m_uri, m_connectivityType, rep, queryParametersMap,
-                         m_headerOptions, attributeHandler, QoS);
+                         m_host, m_uri, rep, queryParametersMap, m_headerOptions, attributeHandler, QoS);
 }
 
 OCStackResult OCResource::put(const OCRepresentation& rep,
@@ -157,8 +148,7 @@ OCStackResult OCResource::post(const OCRepresentation& rep,
                                QualityOfService QoS)
 {
     return checked_guard(m_clientWrapper.lock(), &IClientWrapper::PostResourceRepresentation,
-                         m_host, m_uri, m_connectivityType, rep, queryParametersMap,
-                         m_headerOptions, attributeHandler, QoS);
+                         m_host, m_uri, rep, queryParametersMap, m_headerOptions, attributeHandler, QoS);
 }
 
 OCStackResult OCResource::post(const OCRepresentation& rep,
@@ -205,7 +195,7 @@ OCStackResult OCResource::post(const std::string& resourceType,
 OCStackResult OCResource::deleteResource(DeleteCallback deleteHandler, QualityOfService QoS)
 {
     return checked_guard(m_clientWrapper.lock(), &IClientWrapper::DeleteResource,
-                         m_host, m_uri, m_connectivityType, m_headerOptions, deleteHandler, QoS);
+                         m_host, m_uri, m_headerOptions, deleteHandler, QoS);
 }
 
 OCStackResult OCResource::deleteResource(DeleteCallback deleteHandler)
@@ -227,8 +217,7 @@ OCStackResult OCResource::observe(ObserveType observeType,
 
     return checked_guard(m_clientWrapper.lock(), &IClientWrapper::ObserveResource,
                          observeType, &m_observeHandle, m_host,
-                         m_uri, m_connectivityType, queryParametersMap, m_headerOptions,
-                         observeHandler, QoS);
+                         m_uri, queryParametersMap, m_headerOptions, observeHandler, QoS);
 }
 
 OCStackResult OCResource::observe(ObserveType observeType,
@@ -276,103 +265,9 @@ std::string OCResource::uri() const
     return m_uri;
 }
 
-OCConnectivityType OCResource::connectivityType() const
-{
-    return m_connectivityType;
-}
-
 bool OCResource::isObservable() const
 {
     return m_isObservable;
 }
 
-
-OCResourceIdentifier OCResource::uniqueIdentifier() const
-{
-    return m_resourceId;
-}
-
-std::string OCResource::sid() const
-{
-    return this->uniqueIdentifier().m_representation;
-}
-
-bool OCResource::operator==(const OCResource &other) const
-{
-    return m_resourceId == other.m_resourceId;
-}
-
-bool OCResource::operator!=(const OCResource &other) const
-{
-    return m_resourceId != other.m_resourceId;
-}
-
-bool OCResource::operator<(const OCResource &other) const
-{
-    return m_resourceId < other.m_resourceId;
-}
-
-bool OCResource::operator>(const OCResource &other) const
-{
-    return m_resourceId > other.m_resourceId;
-}
-
-bool OCResource::operator<=(const OCResource &other) const
-{
-    return m_resourceId <= other.m_resourceId;
-}
-
-bool OCResource::operator>=(const OCResource &other) const
-{
-    return m_resourceId >= other.m_resourceId;
-}
-
-OCResourceIdentifier::OCResourceIdentifier(const std::string& wireServerIdentifier,
-        const std::string& resourceUri)
-    :m_representation(wireServerIdentifier), m_resourceUri(resourceUri)
-{
-}
-
-std::ostream& operator <<(std::ostream& os, const OCResourceIdentifier& ri)
-{
-
-    os << ri.m_representation<<ri.m_resourceUri;
-
-    return os;
-}
-
-bool OCResourceIdentifier::operator==(const OCResourceIdentifier &other) const
-{
-    return m_representation == other.m_representation
-        && m_resourceUri == other.m_resourceUri;
-}
-
-bool OCResourceIdentifier::operator!=(const OCResourceIdentifier &other) const
-{
-    return !(*this == other);
-}
-
-bool OCResourceIdentifier::operator<(const OCResourceIdentifier &other) const
-{
-    return m_resourceUri < other.m_resourceUri
-        || (m_resourceUri == other.m_resourceUri &&
-                m_representation < other.m_representation);
-}
-
-bool OCResourceIdentifier::operator>(const OCResourceIdentifier &other) const
-{
-    return *this != other && !(*this<other);
-}
-
-bool OCResourceIdentifier::operator<=(const OCResourceIdentifier &other) const
-{
-    return !(*this > other);
-}
-
-bool OCResourceIdentifier::operator>=(const OCResourceIdentifier &other) const
-{
-    return !(*this < other);
-}
-
 } // namespace OC
-

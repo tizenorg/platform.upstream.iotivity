@@ -24,9 +24,7 @@
 
 #ifndef __CPLUFFADAPTER_H
 #define __CPLUFFADAPTER_H
-#ifndef DLOPEN_POSIX
 #define DLOPEN_POSIX
-#endif
 
 #include <vector>
 #include <dirent.h>
@@ -175,11 +173,11 @@ namespace OIC
             *
             * @return OICPluginManager pointer Address.
             */
-            static CpluffAdapter *Getinstance(void *args = NULL)
+            static CpluffAdapter *Getinstance()
             {
                 if (NULL == s_pinstance)
                 {
-                    s_pinstance = new CpluffAdapter(args);
+                    s_pinstance = new CpluffAdapter();
                 }
 
                 return s_pinstance;
@@ -204,7 +202,7 @@ namespace OIC
             * During construction time, all plugins under the root plugin path will be loaded.
             *
             */
-            CpluffAdapter(void *args = NULL);
+            CpluffAdapter();
 
             /**
             * Virtual destructor

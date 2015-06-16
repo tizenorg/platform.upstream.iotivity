@@ -96,4 +96,3 @@ char* oicapp_util_wifi()
 	return ip_addr;
 }
 
-

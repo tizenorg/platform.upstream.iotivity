@@ -48,9 +48,6 @@ namespace OC
         virtual OCStackResult registerDeviceInfo(
                     const OCDeviceInfo deviceInfo);
 
-        virtual OCStackResult registerPlatformInfo(
-                    const OCPlatformInfo PlatformInfo);
-
         virtual OCStackResult registerResourceWithHost(
                     OCResourceHandle& resourceHandle,
                     std::string& resourceHOST,

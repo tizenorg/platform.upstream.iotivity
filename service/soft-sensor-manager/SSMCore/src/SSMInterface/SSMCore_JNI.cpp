@@ -17,9 +17,8 @@
 * limitations under the License.
 *
 ******************************************************************/
-#include "SSMInterface/SSMCore_JNI.h"
-
 #include "SSMCore.h"
+#include "SSMInterface/SSMCore_JNI.h"
 #include "Common/PlatformLayer.h"
 
 #define JNI_E_INVALIDARG -1001
@@ -38,6 +37,7 @@ jclass                      g_ClassQueryEngine = NULL;
 jclass                      g_ClassDataReader = NULL;
 jclass                      g_ClassModelData = NULL;
 jclass                      g_ClassQueryEngineEvent = NULL;
+
 jclass                      g_ClassReportReceiver = NULL;
 jobject                     g_objReportReceiver = NULL;
 
@@ -53,11 +53,13 @@ void ReportMessage(const char *tag, const char *msg)
     ATTACH_CURRENT_THREAD(g_JVM, env);
 
     jmethodID midReportReceiver =
-        env->GetMethodID(g_ClassReportReceiver, "onMessageReceived",
+        env->GetMethodID(g_ClassReportReceiver, "OnMessageReceived",
                          "(Ljava/lang/String;Ljava/lang/String;)V");
 
-    env->CallVoidMethod(g_objReportReceiver, midReportReceiver,
-                        env->NewStringUTF(tag), env->NewStringUTF(msg));
+    jclass nonVIrtualObject = env->GetObjectClass(g_objReportReceiver);
+
+    env->CallNonvirtualVoidMethod(g_objReportReceiver, nonVIrtualObject, midReportReceiver,
+                                  env->NewStringUTF(tag), env->NewStringUTF(msg));
 
     DETACH_CURRENT_THREAD(g_JVM);
 
@@ -86,7 +88,7 @@ class QueryEngineEventReceiver
             }
         }
 
-        void setQueryEngineEventObj(jobject objQueryEngineEvent)
+        void SetQueryEngineEventObj(jobject objQueryEngineEvent)
         {
             if (m_objQueryEngineEvent != NULL)
             {
@@ -98,7 +100,7 @@ class QueryEngineEventReceiver
             m_objQueryEngineEvent = objQueryEngineEvent;
         }
 
-        SSMRESULT onQueryEngineEvent(int cqid, IDataReader *pResult)
+        SSMRESULT onQueryEngineEvent(IN int cqid, IN IDataReader *pResult)
         {
             JNIEnv *env;
             g_JVM->GetEnv((void **) &env, JNI_VERSION_1_6);
@@ -106,17 +108,19 @@ class QueryEngineEventReceiver
             ATTACH_CURRENT_THREAD(g_JVM, env);
 
             jmethodID midQueryEngineEvent =
-                env->GetMethodID(g_ClassQueryEngineEvent, "onQueryEngineEvent",
-                                 "(ILorg/iotivity/service/ssm/DataReader;)V");
+                env->GetMethodID(g_ClassQueryEngineEvent, "OnQueryEngineEvent",
+                                 "(ILcom/sec/android/ssmcore/DataReader;)V");
+
+            jclass nonVIrtualObject = env->GetObjectClass(m_objQueryEngineEvent);
 
             jmethodID cid_DataReader = env->GetMethodID(g_ClassDataReader, "<init>", "(I)V");
 
             if (cid_DataReader == NULL)
                 return SSM_E_FAIL;
 
-            env->CallVoidMethod(m_objQueryEngineEvent, midQueryEngineEvent,
-                                (jint)cqid,
-                                env->NewObject(g_ClassDataReader, cid_DataReader, (jint)pResult));
+            env->CallNonvirtualVoidMethod(m_objQueryEngineEvent, nonVIrtualObject, midQueryEngineEvent,
+                                          (jint)cqid,
+                                          env->NewObject(g_ClassDataReader, cid_DataReader, (jint)pResult));
 
             DETACH_CURRENT_THREAD(g_JVM);
 
@@ -133,19 +137,19 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
         return JNI_ERR;
 
     g_ClassQueryEngine = (jclass) env->NewGlobalRef(
-                             env->FindClass("org/iotivity/service/ssm/QueryEngine"));
+                             env->FindClass("com/sec/android/ssmcore/QueryEngine"));
 
     g_ClassDataReader = (jclass) env->NewGlobalRef(
-                            env->FindClass("org/iotivity/service/ssm/DataReader"));
+                            env->FindClass("com/sec/android/ssmcore/DataReader"));
 
-    g_ClassModelData = (jclass) env->NewGlobalRef(env->FindClass("org/iotivity/service/ssm/ModelData"));
+    g_ClassModelData = (jclass) env->NewGlobalRef(env->FindClass("com/sec/android/ssmcore/ModelData"));
 
     g_ClassQueryEngineEvent = (jclass) env->NewGlobalRef(
-                                  env->FindClass("org/iotivity/service/ssm/IQueryEngineEvent"));
+                                  env->FindClass("com/sec/android/ssmcore/IQueryEngineEvent"));
 
 
     g_ClassReportReceiver = (jclass) env->NewGlobalRef(
-                                env->FindClass("org/iotivity/service/ssm/IReportReceiver"));
+                                env->FindClass("com/sec/android/ssmcore/IReportReceiver"));
 
 
     g_JVM = jvm;
@@ -187,16 +191,9 @@ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *jvm, void *reserved)
         delete g_QueryEngineEventReceiver;
 }
 
-JNIEXPORT void JNICALL Java_org_iotivity_service_ssm_CoreController_initializeSSMCore
+JNIEXPORT void JNICALL Java_com_sec_android_ssmcore_CoreController_InitializeSSMCore
 (JNIEnv *env, jclass clz, jstring jstrXmlDescription)
 {
-    if (jstrXmlDescription == NULL)
-    {
-        env->ThrowNew(env->FindClass("java/lang/IllegalArgumentException"),
-                      "InitializeSSMCore failed with Invalid parameter");
-        return;
-    }
-
     SSMRESULT res = SSM_E_FAIL;
     const char *xmlDescription = env->GetStringUTFChars(jstrXmlDescription, NULL);
 
@@ -208,28 +205,28 @@ JNIEXPORT void JNICALL Java_org_iotivity_service_ssm_CoreController_initializeSS
         env->ThrowNew(env->FindClass("java/lang/IllegalArgumentException"), "InitializeSSMCore failed");
 }
 
-JNIEXPORT void JNICALL Java_org_iotivity_service_ssm_CoreController_startSSMCore
+JNIEXPORT void JNICALL Java_com_sec_android_ssmcore_CoreController_StartSSMCore
 (JNIEnv *env, jclass clz)
 {
     if (StartSSMCore() != SSM_S_OK)
         env->ThrowNew(env->FindClass("java/lang/IllegalArgumentException"), "StartSSMCore failed");
 }
 
-JNIEXPORT void JNICALL Java_org_iotivity_service_ssm_CoreController_stopSSMCore
+JNIEXPORT void JNICALL Java_com_sec_android_ssmcore_CoreController_StopSSMCore
 (JNIEnv *env, jclass clz)
 {
     if (StopSSMCore() != SSM_S_OK)
         env->ThrowNew(env->FindClass("java/lang/IllegalArgumentException"), "StopSSMCore failed");
 }
 
-JNIEXPORT void JNICALL Java_org_iotivity_service_ssm_CoreController_terminateSSMCore
+JNIEXPORT void JNICALL Java_com_sec_android_ssmcore_CoreController_TerminateSSMCore
 (JNIEnv *env, jclass clz)
 {
     if (TerminateSSMCore() != SSM_S_OK)
         env->ThrowNew(env->FindClass("java/lang/IllegalArgumentException"), "TerminateSSMCore failed");
 }
 
-JNIEXPORT jobject JNICALL Java_org_iotivity_service_ssm_CoreController_createQueryEngine
+JNIEXPORT jobject JNICALL Java_com_sec_android_ssmcore_CoreController_CreateQueryEngine
 (JNIEnv *env, jclass clz)
 {
     IQueryEngine        *pQueryEngine = NULL;
@@ -248,13 +245,13 @@ JNIEXPORT jobject JNICALL Java_org_iotivity_service_ssm_CoreController_createQue
     return env->NewObject(g_ClassQueryEngine, cid_QueryEngine, (jint)pQueryEngine);
 }
 
-JNIEXPORT jint JNICALL Java_org_iotivity_service_ssm_CoreController_releaseQueryEngine
+JNIEXPORT jint JNICALL Java_com_sec_android_ssmcore_CoreController_ReleaseQueryEngine
 (JNIEnv *env, jclass clz, jobject queryEngine)
 {
     IQueryEngine        *pQueryEngine = NULL;
 
     jmethodID mid_GetQueryEngineInstance = env->GetMethodID(g_ClassQueryEngine,
-                                           "getQueryEngineInstance", "()I");
+                                           "GetQueryEngineInstance", "()I");
 
     if (mid_GetQueryEngineInstance == NULL)
         return JNI_E_METHODID;
@@ -264,17 +261,10 @@ JNIEXPORT jint JNICALL Java_org_iotivity_service_ssm_CoreController_releaseQuery
     return ReleaseQueryEngine(pQueryEngine);
 }
 
-JNIEXPORT jint JNICALL Java_org_iotivity_service_ssm_CoreController_executeContextQuery
+JNIEXPORT jint JNICALL Java_com_sec_android_ssmcore_CoreController_ExecuteContextQuery
 (JNIEnv *env, jclass clz, jint pQueryEngineInstance, jstring jstrContextQuery)
 {
-    int                 cqid = -1;
-    if (jstrContextQuery == NULL)
-    {
-        env->ThrowNew(env->FindClass("java/lang/IllegalArgumentException"),
-                      "ExecuteContextQuery with Invalid context query");
-        return cqid;
-    }
-
+    int                 cqid = 0;
     IQueryEngine        *pQueryEngine = (IQueryEngine *)pQueryEngineInstance;
 
     const char *contextQuery = env->GetStringUTFChars(jstrContextQuery, NULL);
@@ -288,7 +278,7 @@ JNIEXPORT jint JNICALL Java_org_iotivity_service_ssm_CoreController_executeConte
     return cqid;
 }
 
-JNIEXPORT void JNICALL Java_org_iotivity_service_ssm_CoreController_registerQueryEvent
+JNIEXPORT void JNICALL Java_com_sec_android_ssmcore_CoreController_RegisterQueryEvent
 (JNIEnv *env, jclass clz, jint pQueryEngineInstance, jobject queryEngineEvent)
 {
     IQueryEngine        *pQueryEngine = (IQueryEngine *)pQueryEngineInstance;
@@ -299,11 +289,11 @@ JNIEXPORT void JNICALL Java_org_iotivity_service_ssm_CoreController_registerQuer
         return;
     }
 
-    g_QueryEngineEventReceiver->setQueryEngineEventObj(env->NewGlobalRef(queryEngineEvent));
+    g_QueryEngineEventReceiver->SetQueryEngineEventObj(env->NewGlobalRef(queryEngineEvent));
     pQueryEngine->registerQueryEvent(g_QueryEngineEventReceiver);
 }
 
-JNIEXPORT void JNICALL Java_org_iotivity_service_ssm_CoreController_killContextQuery
+JNIEXPORT void JNICALL Java_com_sec_android_ssmcore_CoreController_KillContextQuery
 (JNIEnv *env, jclass clz, jint pQueryEngineInstance, jint cqid)
 {
     IQueryEngine        *pQueryEngine = (IQueryEngine *)pQueryEngineInstance;
@@ -314,7 +304,7 @@ JNIEXPORT void JNICALL Java_org_iotivity_service_ssm_CoreController_killContextQ
     }
 }
 
-JNIEXPORT jint JNICALL Java_org_iotivity_service_ssm_CoreController_getDataId
+JNIEXPORT jint JNICALL Java_com_sec_android_ssmcore_CoreController_GetDataId
 (JNIEnv *env, jclass clz, jint pDataReaderInstance)
 {
     IModelData *pDataReader = (IModelData *)pDataReaderInstance;
@@ -322,7 +312,7 @@ JNIEXPORT jint JNICALL Java_org_iotivity_service_ssm_CoreController_getDataId
     return pDataReader->getDataId();
 }
 
-JNIEXPORT jint JNICALL Java_org_iotivity_service_ssm_CoreController_getPropertyCount
+JNIEXPORT jint JNICALL Java_com_sec_android_ssmcore_CoreController_GetPropertyCount
 (JNIEnv *env, jclass clz, jint pIModelDataInstance )
 {
     IModelData *pModelData = (IModelData *)pIModelDataInstance;
@@ -330,7 +320,7 @@ JNIEXPORT jint JNICALL Java_org_iotivity_service_ssm_CoreController_getPropertyC
     return pModelData->getPropertyCount();
 }
 
-JNIEXPORT jstring JNICALL Java_org_iotivity_service_ssm_CoreController_getPropertyName
+JNIEXPORT jstring JNICALL Java_com_sec_android_ssmcore_CoreController_GetPropertyName
 (JNIEnv *env, jclass clz, jint pIModelDataInstance, jint propertyIndex )
 {
     IModelData *pModelData = (IModelData *)pIModelDataInstance;
@@ -338,7 +328,7 @@ JNIEXPORT jstring JNICALL Java_org_iotivity_service_ssm_CoreController_getProper
     return env->NewStringUTF(pModelData->getPropertyName(propertyIndex).c_str());
 }
 
-JNIEXPORT jstring JNICALL Java_org_iotivity_service_ssm_CoreController_getPropertyValue
+JNIEXPORT jstring JNICALL Java_com_sec_android_ssmcore_CoreController_GetPropertyValue
 (JNIEnv *env, jclass clz, jint pIModelDataInstance, jint propertyIndex )
 {
     IModelData *pModelData = (IModelData *)pIModelDataInstance;
@@ -346,7 +336,7 @@ JNIEXPORT jstring JNICALL Java_org_iotivity_service_ssm_CoreController_getProper
     return env->NewStringUTF(pModelData->getPropertyValue(propertyIndex).c_str());
 }
 
-JNIEXPORT jobject JNICALL Java_org_iotivity_service_ssm_CoreController_getAffectedModels
+JNIEXPORT jobject JNICALL Java_com_sec_android_ssmcore_CoreController_GetAffectedModels
 (JNIEnv *env, jclass clz, jint pDataReaderInstance)
 {
     IDataReader *pDataReader = (IDataReader *)pDataReaderInstance;
@@ -371,7 +361,7 @@ JNIEXPORT jobject JNICALL Java_org_iotivity_service_ssm_CoreController_getAffect
     return objAffectedModels;
 }
 
-JNIEXPORT jint JNICALL Java_org_iotivity_service_ssm_CoreController_getModelDataCount
+JNIEXPORT jint JNICALL Java_com_sec_android_ssmcore_CoreController_GetModelDataCount
 (JNIEnv *env, jclass clz, jint pDataReaderInstance, jstring jstrModelName)
 {
     IDataReader *pDataReader = (IDataReader *)pDataReaderInstance;
@@ -388,7 +378,7 @@ JNIEXPORT jint JNICALL Java_org_iotivity_service_ssm_CoreController_getModelData
     return modelCount;
 }
 //return IModelData
-JNIEXPORT jobject JNICALL Java_org_iotivity_service_ssm_CoreController_getModelData
+JNIEXPORT jobject JNICALL Java_com_sec_android_ssmcore_CoreController_GetModelData
 (JNIEnv *env, jclass clz, jint pDataReaderInstance, jstring jstrModelName, jint jintDataIndex )
 {
     IDataReader *pDataReader = (IDataReader *)pDataReaderInstance;
@@ -409,7 +399,7 @@ JNIEXPORT jobject JNICALL Java_org_iotivity_service_ssm_CoreController_getModelD
     return env->NewObject(g_ClassModelData, cid_ModelData, (jint)pModelData);
 }
 
-JNIEXPORT void JNICALL Java_org_iotivity_service_ssm_CoreController_registerReportReceiver
+JNIEXPORT void JNICALL Java_com_sec_android_ssmcore_CoreController_RegisterReportReceiver
 (JNIEnv *env, jclass clz, jobject reportReceiver)
 {
     if (g_objReportReceiver != NULL)

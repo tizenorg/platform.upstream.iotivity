@@ -79,8 +79,7 @@ public:
     void createResource()
     {
         std::string resourceURI = m_lightUri; // URI of the resource
-        // resource type name. In this case, it is light
-        std::string resourceTypeName = "core.light";
+        std::string resourceTypeName = "core.light"; // resource type name. In this case, it is light
         std::string resourceInterface = DEFAULT_INTERFACE; // resource interface.
 
         // OCResourceProperty is defined ocstack.h
@@ -266,6 +265,11 @@ OCEntityHandlerResult entityHandler(std::shared_ptr<OCResourceRequest> request)
         std::string requestType = request->getRequestType();
         int requestFlag = request->getRequestHandlerFlag();
 
+        if(requestFlag & RequestHandlerFlag::InitFlag)
+        {
+            cout << "\t\trequestFlag : Init\n";
+            // entity handler to perform resource initialization operations
+        }
         if(requestFlag & RequestHandlerFlag::RequestFlag)
         {
             cout << "\t\trequestFlag : Request\n";
@@ -358,7 +362,7 @@ void * ChangeLightRepresentation (void *param)
     // This function continuously monitors for the changes
     while (1)
     {
-        sleep (3);
+        sleep (5);
 
         if (gObservation)
         {
@@ -375,8 +379,7 @@ void * ChangeLightRepresentation (void *param)
 
             if(isListOfObservers)
             {
-                std::shared_ptr<OCResourceResponse> resourceResponse =
-                            std::make_shared<OCResourceResponse>();
+                std::shared_ptr<OCResourceResponse> resourceResponse(new OCResourceResponse());
 
                 resourceResponse->setErrorCode(200);
                 resourceResponse->setResourceRepresentation(lightPtr->get(), DEFAULT_INTERFACE);
@@ -407,7 +410,7 @@ void * ChangeLightRepresentation (void *param)
 void PrintUsage()
 {
     std::cout << std::endl;
-    std::cout << "Usage : simpleserverHQ <ObserveType>\n";
+    std::cout << "Usage : simplserver <isListOfObservers>\n";
     std::cout << "   ObserveType : 0 - Observe All\n";
     std::cout << "   ObserveType : 1 - Observe List of observers\n\n";
 }
@@ -447,15 +450,14 @@ int main(int argc, char* argv[])
 
     try
     {
-        // Create the instance of the resource class
-        // (in this case instance of class 'LightResource').
+        // Create the instance of the resource class (in this case instance of class 'LightResource').
         LightResource myLight(cfg);
 
         // Invoke createResource function of class light.
         myLight.createResource();
 
         myLight.addType(std::string("core.brightlight"));
-        myLight.addInterface(std::string(LINK_INTERFACE));
+        myLight.addInterface(std::string("oc.mi.ll"));
 
         // A condition variable will free the mutex it is given, then do a non-
         // intensive block until 'notify' is called on it.  In this case, since we
@@ -464,11 +466,11 @@ int main(int argc, char* argv[])
         std::mutex blocker;
         std::condition_variable cv;
         std::unique_lock<std::mutex> lock(blocker);
-        cv.wait(lock, []{return false;});
+        cv.wait(lock);
     }
-    catch(OCException& e)
+    catch(OCException e)
     {
-        oclog() << "Exception in main: "<< e.what();
+        //log(e.what());
     }
 
     // No explicit call to stop the platform.
@@ -476,4 +478,3 @@ int main(int argc, char* argv[])
 
     return 0;
 }
-

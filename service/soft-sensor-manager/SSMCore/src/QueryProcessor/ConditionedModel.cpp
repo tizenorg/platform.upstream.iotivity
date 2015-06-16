@@ -45,14 +45,14 @@ void CConditionedModel::finalRelease()
     m_triggerId = -1;
 }
 
-SSMRESULT CConditionedModel::create(IContextModel *pBaseModel,
-                                    ModelConditionVec *pModelConditions)
+SSMRESULT CConditionedModel::create(IN IContextModel *pBaseModel,
+                                    IN ModelConditionVec *pModelConditions)
 {
     m_watchCondition = *pModelConditions;
     return pBaseModel->queryInterface(OID_IContextModel, (IBase **)&m_pBaseModel);
 }
 
-SSMRESULT CConditionedModel::getBaseContextModel(IContextModel **ppBaseContextModel)
+SSMRESULT CConditionedModel::getBaseContextModel(OUT IContextModel **ppBaseContextModel)
 {
     SSMRESULT res = SSM_E_FAIL;
 
@@ -62,14 +62,14 @@ CLEANUP:
     return res;
 }
 
-SSMRESULT CConditionedModel::registerConditionedModelEvent(IConditionedModelEvent
+SSMRESULT CConditionedModel::registerConditionedModelEvent(IN IConditionedModelEvent
         *pConditionedModelEvent)
 {
     m_pConditionedModelEvent = pConditionedModelEvent;
     return SSM_S_OK;
 }
 
-SSMRESULT CConditionedModel::onWatchModelData(int triggerId, int dataId)
+SSMRESULT CConditionedModel::onWatchModelData(IN int triggerId, IN int dataId)
 {
     SSMRESULT res = SSM_E_FAIL;
 
@@ -85,7 +85,7 @@ SSMRESULT CConditionedModel::onWatchModelData(int triggerId, int dataId)
     return res;
 }
 
-SSMRESULT CConditionedModel::activateTrigger(int *pTriggerId)
+SSMRESULT CConditionedModel::activateTrigger(OUT int *pTriggerId)
 {
     SSMRESULT res = SSM_E_FAIL;
 
@@ -143,7 +143,7 @@ CLEANUP:
     return ret;
 }
 
-SSMRESULT CConditionedModel::getAffectedData(IntVec *pDataIds)
+SSMRESULT CConditionedModel::getAffectedData(OUT IntVec *pDataIds)
 {
     SSMRESULT res = SSM_E_FAIL;
 
@@ -168,7 +168,7 @@ CLEANUP:
     return res;
 }
 
-SSMRESULT CConditionedModel::getWatchCondition(ModelConditionVec *pModelConditions)
+SSMRESULT CConditionedModel::getWatchCondition(OUT ModelConditionVec *pModelConditions)
 {
     *pModelConditions = m_watchCondition;
     return SSM_S_OK;
