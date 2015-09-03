@@ -23,6 +23,7 @@
  *
  * This file contains the APIs for EDR adapter.
  */
+#include <bluetooth.h>
 
 #include "caedradapter.h"
 
