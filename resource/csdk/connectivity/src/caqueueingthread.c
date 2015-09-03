@@ -248,6 +248,64 @@ CAResult_t CAQueueingThreadAddData(CAQueueingThread_t *thread, void *data, uint3
     return CA_STATUS_OK;
 }
 
+CAResult_t CAQueueingThreadJustAddData(CAQueueingThread_t *thread, void *data, uint32_t size)
+{
+    if (NULL == thread)
+    {
+        OIC_LOG(ERROR, TAG, "thread instance is empty..");
+        return CA_STATUS_INVALID_PARAM;
+    }
+
+    if (NULL == data || 0 == size)
+    {
+        OIC_LOG(ERROR, TAG, "data is empty..");
+        return CA_STATUS_INVALID_PARAM;
+    }
+
+    // create thread data
+    u_queue_message_t *message = (u_queue_message_t *) OICMalloc(sizeof(u_queue_message_t));
+
+    if (NULL == message)
+    {
+        OIC_LOG(ERROR, TAG, "memory error!!");
+        return CA_MEMORY_ALLOC_FAILED;
+    }
+
+    message->msg = data;
+    message->size = size;
+
+    // mutex lock
+    ca_mutex_lock(thread->threadMutex);
+
+    // add thread data into list
+    u_queue_add_element(thread->dataQueue, message);
+
+    // mutex unlock
+    ca_mutex_unlock(thread->threadMutex);
+
+    return CA_STATUS_OK;
+}
+
+CAResult_t CAQueueingThreadSendSignal(CAQueueingThread_t *thread)
+{
+    if (NULL == thread)
+    {
+        OIC_LOG(ERROR, TAG, "thread instance is empty..");
+        return CA_STATUS_INVALID_PARAM;
+    }
+
+    // mutex lock
+    ca_mutex_lock(thread->threadMutex);
+
+    // notity the thread
+    ca_cond_signal(thread->threadCond);
+
+    // mutex unlock
+    ca_mutex_unlock(thread->threadMutex);
+
+    return CA_STATUS_OK;
+}
+
 CAResult_t CAQueueingThreadDestroy(CAQueueingThread_t *thread)
 {
     if (NULL == thread)

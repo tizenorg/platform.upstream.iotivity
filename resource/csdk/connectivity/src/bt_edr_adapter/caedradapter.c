@@ -23,6 +23,7 @@
  *
  * This file contains the APIs for EDR adapter.
  */
+#include <bluetooth.h>
 
 #include "caedradapter.h"
 
@@ -848,10 +849,18 @@ void CAEDRErrorHandler(const char *remoteAddress, const char *serviceUUID, const
     OIC_LOG(DEBUG, EDR_ADAPTER_TAG, "OUT");
 }
 
+CAQueueingThread_t* CAGetEDRSendThread()
+{
+    return g_sendQueueHandle;
+}
+
 CAResult_t CAAdapterSendData(const char *remoteAddress, const char *serviceUUID, const void *data,
                              uint32_t dataLength, uint32_t *sentLength)
 {
     OIC_LOG(DEBUG, EDR_ADAPTER_TAG, "IN - CAAdapterSendData");
+
+    bt_error_e err = BT_ERROR_NONE;
+    bool isDiscoveryStarted = false;
 
     if (false == g_adapterState)
     {
@@ -876,7 +885,35 @@ CAResult_t CAAdapterSendData(const char *remoteAddress, const char *serviceUUID,
 
     // Add message to data queue
     CAEDRData *edrData =  CACreateEDRData(remoteEndpoint, data, dataLength);
-    CAQueueingThreadAddData(g_sendQueueHandle, edrData, sizeof (CAEDRData));
+    if (remoteAddress)
+    {
+        CAQueueingThreadAddData(g_sendQueueHandle, edrData, sizeof (CAEDRData));
+    }
+    else
+    {
+        err = bt_adapter_is_discovering(&isDiscoveryStarted);
+        if (BT_ERROR_NONE != err)
+        {
+            OIC_LOG_V(ERROR, EDR_ADAPTER_TAG, "Failed to get discovery state!, error num [%x]", err);
+            CAQueueingThreadAddData(g_sendQueueHandle, edrData, sizeof (CAEDRData));
+        }
+        else
+        {
+            // Should add data to send thread before calling to bt_adapter_start_device_discovery()
+            // cause of syncronization issue with bt discovery thread.
+            CAQueueingThreadJustAddData(g_sendQueueHandle, edrData, sizeof (CAEDRData));
+            if (false == isDiscoveryStarted)
+            {
+                err = bt_adapter_start_device_discovery();
+                if (BT_ERROR_NONE != err)
+                {
+                    OIC_LOG_V(ERROR, EDR_ADAPTER_TAG, "Failed to start discovery!, error num [%x]", err);
+                    CAQueueingThreadSendSignal(g_sendQueueHandle);
+                }
+            }
+            // In here, during bt discovering, so wait to finish it.
+        }
+    }
     *sentLength = dataLength;
 
     // Free remote endpoint

@@ -33,6 +33,7 @@
 #include "cacommon.h"
 #include "caadapterinterface.h"
 #include "cathreadpool.h" /* for thread pool */
+#include "caqueueingthread.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -137,6 +138,14 @@ void CATerminateEDR();
  * @return CA_STATUS_OK or ERROR CODES (CAResult_t error codes in cacommon.h)
  */
 CAResult_t CAAdapterStartQueue();
+
+/**
+ * @brief  Get EDR's send thread instance.
+ * It is useful to signal to EDR's send thread from external thread.
+ * @return EDR's send thread instance
+ */
+CAQueueingThread_t* CAGetEDRSendThread();
+
 
 #ifdef __cplusplus
 } /* extern "C" */

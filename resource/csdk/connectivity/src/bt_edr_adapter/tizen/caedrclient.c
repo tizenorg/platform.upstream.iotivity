@@ -35,6 +35,7 @@
 #include "caedrutils.h"
 #include "logger.h"
 #include "cacommon.h"
+#include "caqueueingthread.h"
 #include "caedrdevicelist.h"
 
 /**
@@ -244,6 +245,7 @@ void CAEDRDeviceDiscoveryCallback(int result, bt_adapter_device_discovery_state_
     OIC_LOG(DEBUG, EDR_ADAPTER_TAG, "IN");
 
     EDRDevice *device = NULL;
+    CAQueueingThread_t *edrSendThread = NULL;
 
     if (BT_ERROR_NONE != result)
     {
@@ -263,6 +265,14 @@ void CAEDRDeviceDiscoveryCallback(int result, bt_adapter_device_discovery_state_
         case BT_ADAPTER_DEVICE_DISCOVERY_FINISHED:
             {
                 OIC_LOG(DEBUG, EDR_ADAPTER_TAG, "Discovery finished!");
+
+                edrSendThread = CAGetEDRSendThread();
+                if (!edrSendThread)
+                {
+                    OIC_LOG(ERROR, EDR_ADAPTER_TAG, "EDR send thread is null");
+                    return;
+                }
+                CAQueueingThreadSendSignal(edrSendThread);
             }
             break;
 
