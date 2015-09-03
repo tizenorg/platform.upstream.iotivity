@@ -263,6 +263,7 @@ void CAEDRDeviceDiscoveryCallback(int result, bt_adapter_device_discovery_state_
         case BT_ADAPTER_DEVICE_DISCOVERY_FINISHED:
             {
                 OIC_LOG(DEBUG, EDR_ADAPTER_TAG, "Discovery finished!");
+                CANotifyEDRDeviceDiscoveryDone();
             }
             break;
 
@@ -483,14 +484,6 @@ CAResult_t CAEDRClientSetCallbacks(void)
     bt_device_set_service_searched_cb(CAEDRServiceSearchedCallback, NULL);
     bt_socket_set_connection_state_changed_cb(CAEDRSocketConnectionStateCallback, NULL);
     bt_socket_set_data_received_cb(CAEDRDataRecvCallback, NULL);
-
-    // Start device discovery
-    CAResult_t result = CAEDRStartDeviceDiscovery();
-    if(CA_STATUS_OK != result)
-    {
-        OIC_LOG(DEBUG, EDR_ADAPTER_TAG, "Failed to Start Device discovery");
-        return CA_STATUS_FAILED;
-    }
 
     OIC_LOG(DEBUG, EDR_ADAPTER_TAG, "OUT");
     return CA_STATUS_OK;

@@ -138,6 +138,14 @@ void CATerminateEDR();
  */
 CAResult_t CAAdapterStartQueue();
 
+/**
+ * @brief  Notify bluetooth device discovery has done.
+ * It sends signal to send thread to send messages in thread queue.
+ * @return EDR's send thread instance
+ */
+CAResult_t CANotifyEDRDeviceDiscoveryDone();
+
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

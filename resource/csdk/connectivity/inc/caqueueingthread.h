@@ -90,6 +90,23 @@ CAResult_t CAQueueingThreadStart(CAQueueingThread_t *thread);
 CAResult_t CAQueueingThreadAddData(CAQueueingThread_t *thread, void *data, uint32_t size);
 
 /**
+ * @brief   Add queueing thread data for new thread.
+ * It only add data and doesn't signal to the thread.
+ * @param   thread      [IN] thread data for new thread control
+ * @param   data        [IN] data that needs to be given for each thread
+ * @param   size        [IN] length of the data
+ * @return  CA_STATUS_OK or ERROR CODES ( CAResult_t error codes in cacommon.h)
+ */
+CAResult_t CAQueueingThreadJustAddData(CAQueueingThread_t *thread, void *data, uint32_t size);
+
+/**
+ * @brief   Send signal to the thread.
+ * @param   thread      [IN] thread data for new thread control
+ * @return  CA_STATUS_OK or ERROR CODES ( CAResult_t error codes in cacommon.h)
+ */
+CAResult_t CAQueueingThreadSendSignal(CAQueueingThread_t *thread);
+
+/**
  * @brief   Stopping the queueing thread
  * @param   thread      [IN] thread data that needs to be started
  * @return  CA_STATUS_OK or ERROR CODES ( CAResult_t error codes in cacommon.h)
