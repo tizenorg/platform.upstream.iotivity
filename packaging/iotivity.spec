@@ -1,5 +1,5 @@
 Name: iotivity
-Version: 0.9.2
+Version: 1.0.0
 Release: 0
 Summary: IoTivity Base Stack & IoTivity Services
 Group: Network & Connectivity/Other
@@ -16,16 +16,17 @@ BuildRequires:  boost-devel
 BuildRequires:  boost-thread
 BuildRequires:  boost-system
 BuildRequires:  boost-filesystem
-BuildRequires:  pkgconfig(glib-2.0)
 BuildRequires:  pkgconfig(dlog)
 BuildRequires:  pkgconfig(uuid)
 BuildRequires:  pkgconfig(capi-network-wifi)
 BuildRequires:  pkgconfig(capi-network-bluetooth)
 BuildRequires:  pkgconfig(capi-appfw-app-common)
+BuildRequires:  pkgconfig(glib-2.0)
 Requires(postun): /sbin/ldconfig
 Requires(post): /sbin/ldconfig
 
-%define release_mode true
+%define release_mode false
+%define secure_mode 0
 
 %description
 IoTivity Base (RICH & LITE) Stack & IoTivity Services
@@ -33,7 +34,7 @@ IoTivity Base (RICH & LITE) Stack & IoTivity Services
 %package service
 Summary: Development files for %{name}
 Group: Network & Connectivity/Service
-Requires: %{name} = %{version}
+Requires: %{name} = %{version}-%{release}
 
 %description service
 The %{name}-service package contains service libraries files for
@@ -42,7 +43,7 @@ developing applications that use %{name}-service.
 %package test
 Summary: Development files for %{name}
 Group: Network & Connectivity/Testing
-Requires: %{name} = %{version}
+Requires: %{name} = %{version}-%{release}
 
 %description test
 The %{name}-test package contains example files to show
@@ -51,7 +52,8 @@ how the iotivity works using %{name}-test
 %package devel
 Summary: Development files for %{name}
 Group: Network & Connectivity/Development
-Requires: %{name} = %{version}
+Requires: %{name} = %{version}-%{release}
+Requires: pkgconfig
 
 %description devel
 The %{name}-devel package contains libraries and header files for
@@ -70,7 +72,7 @@ cp %{SOURCE1001} ./%{name}-test.manifest
 %build
 %define RPM_ARCH %{_arch}
 
-%ifarch armv7l armv7l armv7hl armv7nhl armv7tnhl armv7thl
+%ifarch armv7l armv7hl armv7nhl armv7tnhl armv7thl
 %define RPM_ARCH "armeabi-v7a"
 %endif
 
@@ -87,52 +89,56 @@ cp %{SOURCE1001} ./%{name}-test.manifest
 %endif
 
 
-scons -j 4 TARGET_OS=tizen TARGET_ARCH=%{RPM_ARCH} TARGET_TRANSPORT=IP,BT RELEASE=%{release_mode}
+scons -j 4 TARGET_OS=tizen TARGET_ARCH=%{RPM_ARCH} TARGET_TRANSPORT=IP,BT RELEASE=%{release_mode} SECURED=%{secure_mode}
 
 %install
 rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_includedir}
 mkdir -p %{buildroot}%{_libdir}
+mkdir -p %{buildroot}%{_libdir}/pkgconfig
 mkdir -p %{buildroot}%{_bindir}
 
+
 %if %{release_mode} == "true"
-%define out_mode release
+%define build_mode release
 %else
-%define out_mode debug
+%define build_mode debug
 %endif
 
-cp out/tizen/*/%{out_mode}/resource/examples/devicediscoveryclient %{buildroot}%{_bindir}
-cp out/tizen/*/%{out_mode}/resource/examples/devicediscoveryserver %{buildroot}%{_bindir}
-cp out/tizen/*/%{out_mode}/resource/examples/fridgeclient %{buildroot}%{_bindir}
-cp out/tizen/*/%{out_mode}/resource/examples/fridgeserver %{buildroot}%{_bindir}
-cp out/tizen/*/%{out_mode}/resource/examples/garageclient %{buildroot}%{_bindir}
-cp out/tizen/*/%{out_mode}/resource/examples/garageserver %{buildroot}%{_bindir}
-cp out/tizen/*/%{out_mode}/resource/examples/groupclient %{buildroot}%{_bindir}
-cp out/tizen/*/%{out_mode}/resource/examples/groupserver %{buildroot}%{_bindir}
-cp out/tizen/*/%{out_mode}/resource/examples/lightserver %{buildroot}%{_bindir}
-cp out/tizen/*/%{out_mode}/resource/examples/presenceclient %{buildroot}%{_bindir}
-cp out/tizen/*/%{out_mode}/resource/examples/presenceserver %{buildroot}%{_bindir}
-cp out/tizen/*/%{out_mode}/resource/examples/roomclient %{buildroot}%{_bindir}
-cp out/tizen/*/%{out_mode}/resource/examples/roomserver %{buildroot}%{_bindir}
-cp out/tizen/*/%{out_mode}/resource/examples/simpleclient %{buildroot}%{_bindir}
-cp out/tizen/*/%{out_mode}/resource/examples/simpleclientHQ %{buildroot}%{_bindir}
-cp out/tizen/*/%{out_mode}/resource/examples/simpleclientserver %{buildroot}%{_bindir}
-cp out/tizen/*/%{out_mode}/resource/examples/simpleserver %{buildroot}%{_bindir}
-cp out/tizen/*/%{out_mode}/resource/examples/simpleserverHQ %{buildroot}%{_bindir}
-cp out/tizen/*/%{out_mode}/resource/examples/threadingsample %{buildroot}%{_bindir}
-cp out/tizen/*/%{out_mode}/lib*.so %{buildroot}%{_libdir}
-cp out/tizen/*/%{out_mode}/libSSMSDK.a %{buildroot}%{_libdir}
-cp out/tizen/*/%{out_mode}/libppm.a %{buildroot}%{_libdir}
+cp out/tizen/*/%{build_mode}/resource/examples/devicediscoveryclient %{buildroot}%{_bindir}
+cp out/tizen/*/%{build_mode}/resource/examples/devicediscoveryserver %{buildroot}%{_bindir}
+cp out/tizen/*/%{build_mode}/resource/examples/fridgeclient %{buildroot}%{_bindir}
+cp out/tizen/*/%{build_mode}/resource/examples/fridgeserver %{buildroot}%{_bindir}
+cp out/tizen/*/%{build_mode}/resource/examples/garageclient %{buildroot}%{_bindir}
+cp out/tizen/*/%{build_mode}/resource/examples/garageserver %{buildroot}%{_bindir}
+cp out/tizen/*/%{build_mode}/resource/examples/groupclient %{buildroot}%{_bindir}
+cp out/tizen/*/%{build_mode}/resource/examples/groupserver %{buildroot}%{_bindir}
+cp out/tizen/*/%{build_mode}/resource/examples/lightserver %{buildroot}%{_bindir}
+cp out/tizen/*/%{build_mode}/resource/examples/presenceclient %{buildroot}%{_bindir}
+cp out/tizen/*/%{build_mode}/resource/examples/presenceserver %{buildroot}%{_bindir}
+cp out/tizen/*/%{build_mode}/resource/examples/roomclient %{buildroot}%{_bindir}
+cp out/tizen/*/%{build_mode}/resource/examples/roomserver %{buildroot}%{_bindir}
+cp out/tizen/*/%{build_mode}/resource/examples/simpleclient %{buildroot}%{_bindir}
+cp out/tizen/*/%{build_mode}/resource/examples/simpleclientHQ %{buildroot}%{_bindir}
+cp out/tizen/*/%{build_mode}/resource/examples/simpleclientserver %{buildroot}%{_bindir}
+cp out/tizen/*/%{build_mode}/resource/examples/simpleserver %{buildroot}%{_bindir}
+cp out/tizen/*/%{build_mode}/resource/examples/simpleserverHQ %{buildroot}%{_bindir}
+cp out/tizen/*/%{build_mode}/resource/examples/threadingsample %{buildroot}%{_bindir}
+if echo %{secure_mode}|grep -qi '1'; then
+	cp out/tizen/*/%{build_mode}/libocpmapi.a %{buildroot}%{_libdir}
+fi
+cp out/tizen/*/%{build_mode}/libcoap.a %{buildroot}%{_libdir}
+cp out/tizen/*/%{build_mode}/lib*.so %{buildroot}%{_libdir}
+cp out/tizen/*/%{build_mode}/%{name}.pc %{buildroot}%{_libdir}/pkgconfig
 
 cp resource/csdk/stack/include/*.h %{buildroot}%{_includedir}
 cp resource/csdk/logger/include/*.h %{buildroot}%{_includedir}
 cp resource/csdk/ocrandom/include/*.h %{buildroot}%{_includedir}
+cp resource/c_common/platform_features.h %{buildroot}%{_includedir}
 cp -r resource/oc_logger/include/* %{buildroot}%{_includedir}
 cp resource/include/*.h %{buildroot}%{_includedir}
 
 cp service/things-manager/sdk/inc/*.h %{buildroot}%{_includedir}
-cp service/soft-sensor-manager/SDK/cpp/include/*.h %{buildroot}%{_includedir}
-cp service/protocol-plugin/plugin-manager/src/*.h %{buildroot}%{_includedir}
 
 %if 0%{?tizen_version_major} < 3
 mkdir -p %{buildroot}/%{_datadir}/license
@@ -162,12 +168,15 @@ cp LICENSE.APLv2 %{buildroot}/%{_datadir}/license/%{name}-test
 %files service
 %manifest %{name}.manifest
 %defattr(-,root,root,-)
-%{_libdir}/libBMISensor.so
-%{_libdir}/libDiscomfortIndexSensor.so
-%{_libdir}/libmosquittopp.so
-%{_libdir}/libpmimpl.so
-%{_libdir}/libSSMCore.so
+%{_libdir}/libBMISensorBundle.so
+%{_libdir}/libDISensorBundle.so
+%{_libdir}/libresource_hosting.so
 %{_libdir}/libTGMSDKLibrary.so
+%{_libdir}/libHueBundle.so
+%{_libdir}/librcs_client.so
+%{_libdir}/librcs_common.so
+%{_libdir}/librcs_container.so
+%{_libdir}/librcs_server.so
 %if 0%{?tizen_version_major} < 3
 %{_datadir}/license/%{name}-service
 %else
@@ -205,4 +214,5 @@ cp LICENSE.APLv2 %{buildroot}/%{_datadir}/license/%{name}-test
 %files devel
 %defattr(-,root,root,-)
 %{_libdir}/lib*.a
+%{_libdir}/pkgconfig/%{name}.pc
 %{_includedir}/*
