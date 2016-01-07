@@ -53,7 +53,6 @@ static u_arraylist_t *g_deviceStateList = NULL;
 
 static CAPacketReceiveCallback g_packetReceiveCallback = NULL;
 static CABLEErrorHandleCallback g_clientErrorCallback;
-static ca_thread_pool_t g_threadPoolHandle = NULL;
 static jobject g_leScanCallback = NULL;
 static jobject g_leGattCallback = NULL;
 static jobject g_context = NULL;
@@ -166,7 +165,7 @@ error_exit:
     return CA_STATUS_FAILED;
 }
 
-CAResult_t CALEClientInitialize(ca_thread_pool_t handle)
+CAResult_t CALEClientInitialize()
 {
     OIC_LOG(DEBUG, TAG, "CALEClientInitialize");
 
@@ -206,8 +205,6 @@ CAResult_t CALEClientInitialize(ca_thread_pool_t handle)
 
         return ret;
     }
-
-    g_threadPoolHandle = handle;
 
     ret = CALEClientInitGattMutexVaraibles();
     if (CA_STATUS_OK != ret)
@@ -3162,6 +3159,13 @@ void CAStopLEGattClient()
         (*g_jvm)->DetachCurrentThread(g_jvm);
     }
 
+}
+
+CAResult_t CAInitializeLEGattClient()
+{
+    OIC_LOG(DEBUG, TAG, "Initialize GATT Client");
+    CALEClientInitialize();
+    return CA_STATUS_OK;
 }
 
 void CATerminateLEGattClient()
