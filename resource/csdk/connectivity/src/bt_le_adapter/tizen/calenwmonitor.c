@@ -23,14 +23,15 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<glib.h>
 #include<arpa/inet.h>
 #include<sys/types.h>
 #include<sys/socket.h>
 #include<netinet/in.h>
 
 #include <bluetooth.h>
+#include <bluetooth_internal.h>
 #include <bluetooth_type.h>
-#include <bluetooth_product.h>
 
 
 #include "camutex.h"
@@ -41,7 +42,7 @@
  * @def TZ_LE_NWK_MONITOR_TAG
  * @brief Logging tag for module name
  */
-#define TZ_LE_NWK_MONITOR_TAG "TZ_BLE_ADAPTER_CONTROLLER"
+#define TZ_LE_NWK_MONITOR_TAG "OIC_CA_LE_MONITOR"
 
 /**
  * @var g_bleDeviceStateChangedCallback
@@ -73,18 +74,21 @@ CAResult_t CAInitializeLENetworkMonitor()
 {
     OIC_LOG(DEBUG, TZ_LE_NWK_MONITOR_TAG, "IN");
 
-    CAResult_t res = CAInitLENetworkMonitorMutexVariables();
-    if (CA_STATUS_OK != res)
+    if (NULL == g_bleDeviceStateChangedCbMutex)
     {
-        OIC_LOG(ERROR, TZ_LE_NWK_MONITOR_TAG, "CAInitLENetworkMonitorMutexVariables() failed");
-        return CA_STATUS_FAILED;
+        g_bleDeviceStateChangedCbMutex = ca_mutex_new();
+        if (NULL == g_bleDeviceStateChangedCbMutex)
+        {
+            OIC_LOG(ERROR, TZ_LE_NWK_MONITOR_TAG, "ca_mutex_new failed");
+            return CA_STATUS_FAILED;
+        }
     }
     OIC_LOG(DEBUG, TZ_LE_NWK_MONITOR_TAG, "OUT");
 
     return CA_STATUS_OK;
 }
 
-void CATerminateLENetworkMonitorMutexVariables()
+void CATerminateLENetworkMonitor()
 {
     OIC_LOG(DEBUG, TZ_LE_NWK_MONITOR_TAG, "IN");
 
@@ -94,16 +98,7 @@ void CATerminateLENetworkMonitorMutexVariables()
     OIC_LOG(DEBUG, TZ_LE_NWK_MONITOR_TAG, "OUT");
 }
 
-void CATerminateLENetworkMonitor()
-{
-    OIC_LOG(DEBUG, TZ_LE_NWK_MONITOR_TAG, "IN");
-
-    CATerminateLENetworkMonitorMutexVariables();
-
-    OIC_LOG(DEBUG, TZ_LE_NWK_MONITOR_TAG, "OUT");
-}
-
-CAResult_t CAInitializeLEAdapter()
+CAResult_t CAInitializeLEAdapter(const ca_thread_pool_t threadPool)
 {
     OIC_LOG(DEBUG, TZ_LE_NWK_MONITOR_TAG, "IN");
 
@@ -129,6 +124,17 @@ CAResult_t CAStartLEAdapter()
 {
     // Nothing to do.
 
+    return CA_STATUS_OK;
+}
+
+CAResult_t CAStopLEAdapter()
+{
+    int ret = bt_deinitialize();
+    if (0 != ret)
+    {
+        OIC_LOG(ERROR, TZ_LE_NWK_MONITOR_TAG, "bt_deinitialize failed");
+        return CA_STATUS_FAILED;
+    }
     return CA_STATUS_OK;
 }
 
@@ -242,23 +248,6 @@ CAResult_t CAUnSetLEAdapterStateChangedCb()
     {
         OIC_LOG(DEBUG, TZ_LE_NWK_MONITOR_TAG, "bt_adapter_unset_state_changed_cb failed");
         return CA_STATUS_FAILED;
-    }
-
-    OIC_LOG(DEBUG, TZ_LE_NWK_MONITOR_TAG, "OUT");
-    return CA_STATUS_OK;
-}
-
-CAResult_t CAInitLENetworkMonitorMutexVariables()
-{
-    OIC_LOG(DEBUG, TZ_LE_NWK_MONITOR_TAG, "IN");
-    if (NULL == g_bleDeviceStateChangedCbMutex)
-    {
-        g_bleDeviceStateChangedCbMutex = ca_mutex_new();
-        if (NULL == g_bleDeviceStateChangedCbMutex)
-        {
-            OIC_LOG(ERROR, TZ_LE_NWK_MONITOR_TAG, "ca_mutex_new failed");
-            return CA_STATUS_FAILED;
-        }
     }
 
     OIC_LOG(DEBUG, TZ_LE_NWK_MONITOR_TAG, "OUT");

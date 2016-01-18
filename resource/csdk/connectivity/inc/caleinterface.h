@@ -50,6 +50,24 @@ typedef enum
 } CALETransferType_t;
 
 /**
+ * Stores the information of the Data to be sent from the queues.
+ *
+ * This structure will be pushed to the sender/receiver queue for
+ * processing.
+ */
+typedef struct
+{
+    /// Remote endpoint contains the information of remote device.
+    CAEndpoint_t *remoteEndpoint;
+
+    /// Data to be transmitted over LE transport.
+    uint8_t *data;
+
+    /// Length of the data being transmitted.
+    uint32_t dataLen;
+} CALEData_t;
+
+/**
  * This will be used to notify device status changes to the LE adapter layer.
  * @param[in]  adapter_state State of the adapter.
  */
@@ -83,7 +101,11 @@ typedef CAResult_t (*CABLEDataReceivedCallback)(const char *remoteAddress,
  * @retval ::CA_STATUS_INVALID_PARAM  Invalid input arguments
  * @retval ::CA_STATUS_FAILED Operation failed
  */
+#ifdef __TIZEN__
+CAResult_t CAInitializeLEAdapter(const ca_thread_pool_t threadPool);
+#else
 CAResult_t CAInitializeLEAdapter();
+#endif
 
 /**
  * Start the LE adapter layer.
