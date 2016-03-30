@@ -352,7 +352,6 @@ int main()
                 cout << "4 :: GET ACTIONSET 5 :: DELETE ACTIONSET 6 :: QUIT" << endl;
                 cout << "9 :: FIND GROUP 0 :: FIND BOOKMARK TO OBSERVE" << endl;
 
-                fflush(stdin);
                 cin >> n;
 
                 if (n == 9)

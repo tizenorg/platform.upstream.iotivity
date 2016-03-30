@@ -221,7 +221,6 @@ int main()
                     break;
                 }
 
-                fflush(stdin);
             }
         }
     }
