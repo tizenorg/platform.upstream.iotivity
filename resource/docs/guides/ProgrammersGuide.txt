@@ -59,7 +59,7 @@ The OIC protocol (abbreviated to OC in code) is a REST-like interface similar to
 
 @subsection Protocol_CoAP Constrained Application Protocol (CoAP)
 
-Constrained Application Protocol is one of the IoTivity supported transports. It is designed to be used in very simple devices and is particularly targeted for small, low power devices like sensors, switches, etc. The protocol is modeled after HTTP and provides easy translation between HTTP and CoAP. It is UDP-based (instead of TCP), providing support for multicast.
+Constrained Application Protocol is one of the IoTivity supported transports. It is designed to be used in very simple devices and is particularly targeted for small, low power devices like sensors, switches, etc. The protocol is modelled after HTTP and provides easy translation between HTTP and CoAP. It is UDP-based (instead of TCP), providing support for multicast.
 
 CoAP is now a standard (RFC7252) as defined by the Internet Engineering Task Force (IETF) Constrained RESTful environments (CoRE) Working Group. Additional RFCs and drafts cover higher order behaviors.
 

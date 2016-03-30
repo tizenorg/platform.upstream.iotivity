@@ -14,7 +14,7 @@ OCProject/
 │   ├── ocstack.h
 │   └── ocstack_stub.c
 ├── examples
-│   ├── client 
+│   ├── client
 │   │   ├── MyMultiResourceHandler.cpp
 │   │   ├── MyMultiResourceHandler.h
 │   │   ├── MyObserverHandler.cpp
@@ -35,7 +35,7 @@ OCProject/
 │   ├── test_OCClient.cpp
 │   ├── test_OCReflect.cpp
 │   └── test_properties.cpp
-├── include - TODO : Seperate what we expose and what we don't
+├── include - TODO : Separate what we expose and what we don't
 │   ├── IClientWrapper.h
 │   ├── InitializeException.h
 │   ├── InProcClientWrapper.h

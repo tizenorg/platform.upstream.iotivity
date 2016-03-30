@@ -322,7 +322,7 @@ Many of these parameters are passed through to the C SDK directly. However, the 
 
     if (OC_STACK_OK == result)
     {
-        //Successfull
+        //Successful
     }
 
 
@@ -1327,7 +1327,7 @@ void * ChangeLightRepresentation (void *param)
             // If under observation if there are any changes to the light resource
             // we call notifyObservors
             //
-            // For demostration we are changing the power value and notifying.
+            // For demonstration we are changing the power value and notifying.
             myLightResource.m_power += 10;
 
             cout << "\nPower updated to : " << myLightResource.m_power << endl;
