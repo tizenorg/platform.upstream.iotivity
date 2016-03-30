@@ -68,22 +68,20 @@ struct cpi_mutex_t {
 
 CP_HIDDEN cpi_mutex_t * cpi_create_mutex(void) {
 	cpi_mutex_t *mutex;
-	
 	if ((mutex = malloc(sizeof(cpi_mutex_t))) == NULL) {
 		return NULL;
 	}
 	memset(mutex, 0, sizeof(cpi_mutex_t));
 	if (pthread_mutex_init(&(mutex->os_mutex), NULL)) {
+		free(mutex);
 		return NULL;
 	} else if (pthread_cond_init(&(mutex->os_cond_lock), NULL)) {
 		int ec;
-		
 		ec = pthread_mutex_destroy(&(mutex->os_mutex));
 		assert(!ec);
 		return NULL;
 	} else if (pthread_cond_init(&(mutex->os_cond_wake), NULL)) {
 		int ec;
-		
 		ec = pthread_mutex_destroy(&(mutex->os_mutex));
 		assert(!ec);
 		ec = pthread_cond_destroy(&(mutex->os_cond_wake));
