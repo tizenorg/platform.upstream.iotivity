@@ -35,7 +35,6 @@ Requires(post): /sbin/ldconfig
 %endif
 
 %{!?TARGET_TRANSPORT: %define TARGET_TRANSPORT IP}
-%{!?SECURED: %define SECURED 0}
 %{!?LOGGING: %define LOGGING True}
 %{!?ROUTING: %define ROUTING GW}
 %{!?ES_TARGET_ENROLLEE: %define ES_TARGET_ENROLLEE tizen}
@@ -107,9 +106,9 @@ cp %{SOURCE1001} ./%{name}-test.manifest
 %endif
 
 #VERBOSE=1
-scons -j2 --prefix=%{_prefix} \
+scons -j3 --prefix=%{_prefix} \
 	TARGET_OS=tizen TARGET_ARCH=%{RPM_ARCH} TARGET_TRANSPORT=%{TARGET_TRANSPORT} \
-	RELEASE=%{RELEASE} SECURED=%{SECURED} LOGGING=%{LOGGING} ROUTING=%{ROUTING} \
+	RELEASE=%{RELEASE} SECURED=1 LOGGING=%{LOGGING} ROUTING=%{ROUTING} \
 	ES_TARGET_ENROLLEE=%{ES_TARGET_ENROLLEE} ES_ROLE=%{ES_ROLE} ES_SOFTAP_MODE=%{ES_SOFTAP_MODE} \
 	LIB_INSTALL_DIR=%{_libdir}
 
@@ -119,7 +118,7 @@ rm -rf %{buildroot}
 CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ;
 scons install --install-sandbox=%{buildroot} --prefix=%{_prefix} \
 	TARGET_OS=tizen TARGET_ARCH=%{RPM_ARCH} TARGET_TRANSPORT=%{TARGET_TRANSPORT} \
-	RELEASE=%{RELEASE} SECURED=%{SECURED} LOGGING=%{LOGGING} ROUTING=%{ROUTING} \
+	RELEASE=%{RELEASE} SECURED=1 LOGGING=%{LOGGING} ROUTING=%{ROUTING} \
 	ES_TARGET_ENROLLEE=%{ES_TARGET_ENROLLEE} ES_ROLE=%{ES_ROLE} ES_SOFTAP_MODE=%{ES_SOFTAP_MODE} \
 	LIB_INSTALL_DIR=%{_libdir}
 
@@ -154,7 +153,6 @@ cp out/tizen/*/%{build_mode}/resource/examples/simpleserverHQ %{ex_install_dir}
 cp out/tizen/*/%{build_mode}/resource/examples/threadingsample %{ex_install_dir}
 cp out/tizen/*/%{build_mode}/resource/examples/oic_svr_db_server.dat %{ex_install_dir}
 cp out/tizen/*/%{build_mode}/resource/examples/oic_svr_db_client.dat %{ex_install_dir}
-%if 0%{?SECURED} == 1
 mkdir -p %{ex_install_dir}/provisioning
 cp out/tizen/*/%{build_mode}/resource/provisioning/examples/oic_svr_db_client.dat %{ex_install_dir}/provisioning/
 cp out/tizen/*/%{build_mode}/resource/provisioning/examples/provisioningclient %{ex_install_dir}/provisioning/
@@ -166,7 +164,6 @@ cp ./resource/csdk/security/provisioning/include/internal/*.h %{buildroot}%{_inc
 cp ./resource/csdk/security/provisioning/include/*.h %{buildroot}%{_includedir}
 cp ./resource/csdk/connectivity/api/casecurityinterface.h %{buildroot}%{_includedir}
 cp ./resource/csdk/connectivity/api/cacommon.h %{buildroot}%{_includedir}
-%endif
 
 %if 0%{?tizen_version_major} < 3
 mkdir -p %{buildroot}/%{_datadir}/license
@@ -191,10 +188,8 @@ cp service/easy-setup/enrollee/inc/*.h %{buildroot}%{_includedir}
 %{_libdir}/liboc_logger_core.so
 %{_libdir}/liboctbstack.so
 %{_libdir}/libconnectivity_abstraction.so
-%if 0%{?SECURED} == 1
 %{_libdir}/libocpmapi.so
 %{_libdir}/libocprovision.so
-%endif
 %if 0%{?tizen_version_major} < 3
 %{_datadir}/license/%{name}
 %else
