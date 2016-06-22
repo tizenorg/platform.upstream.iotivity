@@ -156,8 +156,8 @@ cp out/tizen/*/%{build_mode}/resource/examples/oic_svr_db_server.dat %{ex_instal
 cp out/tizen/*/%{build_mode}/resource/examples/oic_svr_db_client.dat %{ex_install_dir}
 %if 0%{?SECURED} == 1
 mkdir -p %{ex_install_dir}/provisioning
-cp out/tizen/*/%{build_mode}/resource/provisioning/examples/oic_svr_db_client.dat %{ex_install_dir}/provisioning/
-cp out/tizen/*/%{build_mode}/resource/provisioning/examples/provisioningclient %{ex_install_dir}/provisioning/
+cp out/tizen/*/%{build_mode}/resource/csdk/security/provisioning/sample/provisioningclient %{ex_install_dir}/provisioning/
+cp out/tizen/*/%{build_mode}/resource/csdk/security/provisioning/sample/oic_svr_db_client.dat %{ex_install_dir}/provisioning/
 
 cp ./resource/csdk/security/include/pinoxmcommon.h %{buildroot}%{_includedir}
 cp ./resource/csdk/security/include/securevirtualresourcetypes.h %{buildroot}%{_includedir}
