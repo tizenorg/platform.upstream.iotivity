@@ -166,6 +166,10 @@ cp ./resource/csdk/security/provisioning/include/*.h %{buildroot}%{_includedir}
 cp ./resource/csdk/connectivity/api/casecurityinterface.h %{buildroot}%{_includedir}
 cp ./resource/csdk/connectivity/api/cacommon.h %{buildroot}%{_includedir}
 
+# For IoTCon
+cp ./resource/csdk/security/include/internal/doxmresource.h %{buildroot}%{_includedir}
+cp ./resource/csdk/security/include/internal/verresource.h %{buildroot}%{_includedir}
+
 %if 0%{?tizen_version_major} < 3
 mkdir -p %{buildroot}/%{_datadir}/license
 cp LICENSE.APLv2 %{buildroot}/%{_datadir}/license/%{name}
