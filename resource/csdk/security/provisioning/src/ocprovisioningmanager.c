@@ -691,7 +691,7 @@ OCStackResult OCGetDevInfoFromNetwork(unsigned short waittime,
     size_t deleteCnt = 0;
     while (pCurDev)
     {
-        if(true == PMDeleteFromUUIDList(uuidList, &pCurDev->doxm->deviceID))
+        if(true == PMDeleteFromUUIDList(&uuidList, &pCurDev->doxm->deviceID))
         {
             deleteCnt++;
         }
