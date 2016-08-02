@@ -46,11 +46,16 @@ if target_os not in ['windows', 'winrt']:
 	# Note: 'pthread' is in libc for android. On other platform, if use
 	# new gcc(>4.9?) it isn't required, otherwise, it's required
 	if target_os != 'android':
-		examples_env.AppendUnique(LIBS = ['-lpthread'])
+		examples_env.AppendUnique(LIBS = ['pthread'])
 
 examples_env.AppendUnique(LIBPATH = [env.get('BUILD_DIR')])
 examples_env.AppendUnique(RPATH = [env.get('BUILD_DIR')])
-examples_env.PrependUnique(LIBS = ['oc', 'octbstack', 'oc_logger', 'connectivity_abstraction', 'coap'])
+examples_env.PrependUnique(LIBS = ['coap'])
+examples_env.AppendUnique(LIBS = ['connectivity_abstraction'])
+examples_env.AppendUnique(LIBS = ['oc_logger'])
+examples_env.AppendUnique(LIBS = ['octbstack'])
+examples_env.AppendUnique(LIBS = ['oc'])
+
 if env.get('SECURED') == '1':
     examples_env.AppendUnique(LIBS = ['tinydtls'])
 
@@ -86,11 +91,14 @@ lightserver = examples_env.Program('lightserver', 'lightserver.cpp')
 devicediscoveryserver = examples_env.Program('devicediscoveryserver', 'devicediscoveryserver.cpp')
 devicediscoveryclient = examples_env.Program('devicediscoveryclient', 'devicediscoveryclient.cpp')
 threadingsample = examples_env.Program('threadingsample', 'threadingsample.cpp')
+directpairingclient = examples_env.Program('directpairingclient', 'directpairingclient.cpp')
 
 clientjson = examples_env.Install(env.get('BUILD_DIR') + '/resource/examples/',
 				env.get('SRC_DIR') + '/resource/examples/' + 'oic_svr_db_client.dat')
 serverjson = examples_env.Install(env.get('BUILD_DIR') + '/resource/examples/',
 				env.get('SRC_DIR') + '/resource/examples/' + 'oic_svr_db_server.dat')
+directpairingdat = examples_env.Install(env.get('BUILD_DIR') + '/resource/examples/',
+				env.get('SRC_DIR') + '/resource/examples/' + 'oic_svr_db_client_directpairing.dat')
 Alias("examples", [simpleserver, simpleclient,
 		simpleserverHQ, simpleclientHQ,
 		fridgeserver, fridgeclient,
@@ -100,7 +108,7 @@ Alias("examples", [simpleserver, simpleclient,
 		groupserver, groupclient,
 		lightserver,
 		devicediscoveryserver, devicediscoveryclient,
-		threadingsample,
-		serverjson, clientjson
+		threadingsample, directpairingclient,
+		serverjson, clientjson, directpairingdat
      ])
 env.AppendTarget('examples')

@@ -2,10 +2,11 @@
 %define ROOTDIR  %{_builddir}/%{name}-%{version}
 %define DEST_INC_DIR  %{buildroot}/%{_includedir}/OICHeaders
 %define DEST_LIB_DIR  %{buildroot}/%{_libdir}
+%{!?VERBOSE: %define VERBOSE 1}
 
 Name: com-oic-ri
-Version:    0.1
-Release:    1
+Version:    1.1.1
+Release:    0
 Summary: Tizen oicri application
 URL: http://slp-source.sec.samsung.net
 Source: %{name}-%{version}.tar.gz
@@ -36,7 +37,7 @@ SLP oicri application
 echo %{ROOTDIR}
 
 scons TARGET_OS=tizen -c
-scons TARGET_OS=tizen TARGET_TRANSPORT=%{TARGET_TRANSPORT} SECURED=%{SECURED} RELEASE=%{RELEASE} LOGGING=%{LOGGING} ROUTING=%{ROUTING}
+scons VERBOSE=%{VERBOSE} TARGET_OS=tizen TARGET_TRANSPORT=%{TARGET_TRANSPORT} SECURED=%{SECURED} RELEASE=%{RELEASE} LOGGING=%{LOGGING} ROUTING=%{ROUTING}
 
 %install
 mkdir -p %{DEST_INC_DIR}
@@ -66,6 +67,7 @@ cp resource/oc_logger/include/targets/oc_ostream_logger.h %{DEST_INC_DIR}
 cp resource/csdk/stack/include/ocpresence.h %{DEST_INC_DIR}
 cp resource/csdk/stack/include/ocpayload.h %{DEST_INC_DIR}
 cp resource/c_common/platform_features.h %{DEST_INC_DIR}
+cp resource/c_common/*/include/*.h %{DEST_INC_DIR}
 cp resource/csdk/stack/include/payload_logging.h %{DEST_INC_DIR}
 cp resource/csdk/stack/include/rdpayload.h %{DEST_INC_DIR}
 cp extlibs/tinycbor/tinycbor/src/cbor.h %{DEST_INC_DIR}

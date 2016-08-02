@@ -58,7 +58,7 @@ LOCAL_SRC_FILES :=  JniOcStack.cpp \
                     JniEntityHandler.cpp \
                     JniOnResourceFoundListener.cpp \
                     JniOnDeviceInfoListener.cpp \
-		    JniOnPlatformInfoListener.cpp \
+                    JniOnPlatformInfoListener.cpp \
                     JniOnPresenceListener.cpp \
                     JniOnGetListener.cpp \
                     JniOnPutListener.cpp \
@@ -74,15 +74,18 @@ LOCAL_SRC_FILES :=  JniOcStack.cpp \
                     JniOcPlatform.cpp \
                     JniOcResource.cpp \
                     JniOcResourceIdentifier.cpp \
-                    JniOcSecurity.cpp
+                    JniOcSecurity.cpp \
+                    JniOnDPDevicesFoundListener.cpp \
+                    JniOnDirectPairingListener.cpp \
+                    JniOcDirectPairDevice.cpp
 ifeq ($(SECURED), 1)
-LOCAL_SRC_FILES +=  JniOcSecureResource.cpp \
-                    JniOcProvisioning.cpp \
-                    JniSecureUtils.cpp \
-                    JniProvisionResultListner.cpp \
-                    JniPinCheckListener.cpp \
-                    JniDisplayPinListener.cpp
-endif
+    LOCAL_SRC_FILES +=  JniOcSecureResource.cpp \
+                        JniOcProvisioning.cpp \
+                        JniSecureUtils.cpp \
+                        JniProvisionResultListner.cpp \
+                        JniPinCheckListener.cpp \
+                        JniDisplayPinListener.cpp
+                        endif
 
 LOCAL_LDLIBS := -llog
 LOCAL_STATIC_LIBRARIES := android-oc
@@ -112,6 +115,7 @@ LOCAL_C_INCLUDES += $(OIC_SRC_PATH)/csdk/security/provisioning/include
 LOCAL_C_INCLUDES += $(OIC_SRC_PATH)/csdk/security/provisioning/include/oxm/
 LOCAL_C_INCLUDES += $(OIC_SRC_PATH)/csdk/security/provisioning/include/internal
 LOCAL_C_INCLUDES += $(OIC_SRC_PATH)/csdk/security/include
+LOCAL_C_INCLUDES += $(OIC_SRC_PATH)/csdk/security/include/internal
 LOCAL_C_INCLUDES += $(OIC_SRC_PATH)/csdk/connectivity/api
 LOCAL_C_INCLUDES += $(OIC_SRC_PATH)/csdk/connectivity/lib/libcoap-4.1.1
 include $(BUILD_SHARED_LIBRARY)

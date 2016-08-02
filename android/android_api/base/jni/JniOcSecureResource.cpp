@@ -22,6 +22,9 @@
 
 #include "JniOcSecureResource.h"
 #include "JniSecureUtils.h"
+#include "aclresource.h"
+#include "oic_malloc.h"
+#include "oic_string.h"
 namespace PH = std::placeholders;
 
 JniOcSecureResource::JniOcSecureResource(std::shared_ptr<OCSecureResource> device)
@@ -210,32 +213,112 @@ OCStackResult JniOcSecureResource::provisionACL(JNIEnv* env, jobject _acl, jobje
 {
     OCStackResult ret;
     JniProvisionResultListner *resultListener = AddProvisionResultListener(env, jListener);
-    OicSecAcl_t *acl = new OicSecAcl_t;
+    OicSecAcl_t *acl = (OicSecAcl_t*)OICCalloc(1, sizeof(OicSecAcl_t));
 
     if (!acl)
     {
         return OC_STACK_NO_MEMORY;
     }
 
-    acl->next = nullptr;
-
     if (OC_STACK_OK != JniSecureUtils::convertJavaACLToOCAcl(env, _acl, acl))
     {
-        delete acl;
+        JniSecureUtils::FreeACLList(acl);
         return OC_STACK_ERROR;
     }
 
     ResultCallBack resultCallback = [acl, resultListener](PMResultList_t *result, int hasError)
     {
-        delete acl;
+        JniSecureUtils::FreeACLList(acl);
         resultListener->ProvisionResultCallback(result, hasError, ListenerFunc::PROVISIONACL);
     };
     ret = m_sharedSecureResource->provisionACL(acl, resultCallback);
 
     if (ret != OC_STACK_OK)
     {
-        delete acl;
+        JniSecureUtils::FreeACLList(acl);
+    }
+    return ret;
+}
 
+OCStackResult JniOcSecureResource::provisionDirectPairing(JNIEnv* env, jobjectArray jpdacls,
+        jobject jListener, std::string pin, std::vector<int> prms, int edp)
+{
+    OCStackResult ret;
+    JniProvisionResultListner *resultListener = AddProvisionResultListener(env, jListener);
+
+    jsize len = env->GetArrayLength(jpdacls);
+
+    OicSecPconf_t *pconf = nullptr;
+    OicSecPdAcl_t *head = nullptr;
+
+    for (jsize i = 0; i < len; ++i)
+    {
+        OicSecPdAcl_t *pdacl = new OicSecPdAcl_t;
+        if (!pdacl)
+        {
+            return OC_STACK_NO_MEMORY;
+        }
+
+        memset(pdacl, 0, sizeof(OicSecPdAcl_t));
+        pdacl->next = nullptr;
+
+        jobject jpdacl  = env->GetObjectArrayElement(jpdacls, i);
+
+        if (OC_STACK_OK != JniSecureUtils::convertJavaPdACLToOCAcl(env, jpdacl, pdacl))
+        {
+            delete pdacl;
+            return OC_STACK_ERROR;
+        }
+
+        pdacl->next = head;
+        head = pdacl;
+    }
+
+    pconf = new OicSecPconf_t;
+    memset(pconf, 0, sizeof(OicSecPconf_t));
+    pconf->edp = edp;
+    pconf->prmLen = prms.size();
+    pconf->prm = new OicSecPrm_t[pconf->prmLen];
+    pconf->pddevLen = 0;
+
+    for (int i = 0 ; i < prms.size(); i++)
+        pconf->prm[i] = (OicSecPrm_t)prms[i];
+
+    memcpy(pconf->pin.val, pin.c_str(), DP_PIN_LENGTH);
+    pconf->pdacls = head;
+
+    ResultCallBack resultCallback = [head, resultListener, pconf, prms]
+        (PMResultList_t *result, int hasError)
+        {
+            OicSecPdAcl_t *tmp1, *tmp2;
+            tmp1 = head;
+            while (tmp1)
+            {
+                tmp2 = tmp1->next;
+                delete tmp1;
+                tmp1 = tmp2;
+            }
+
+            delete pconf->prm;
+            delete pconf;
+            resultListener->ProvisionResultCallback(result, hasError, ListenerFunc::PROVISIONDIRECTPAIRING);
+        };
+
+    ret = m_sharedSecureResource->provisionDirectPairing(pconf, resultCallback);
+
+    if (ret != OC_STACK_OK)
+    {
+        OicSecPdAcl_t *tmp1, *tmp2;
+        tmp1 = head;
+        while (tmp1)
+        {
+            tmp2 = tmp1->next;
+            delete tmp1;
+            tmp1 = tmp2;
+        }
+
+        delete pconf->prm;
+        delete pconf;
     }
     return ret;
 }
@@ -259,7 +342,7 @@ OCStackResult JniOcSecureResource::provisionPairwiseDevices(JNIEnv* env, jint ty
 
     if (_acl1)
     {
-        acl1 = new OicSecAcl_t;
+        acl1 = (OicSecAcl_t*)OICCalloc(1, sizeof(OicSecAcl_t));
         if (!acl1)
         {
             return OC_STACK_NO_MEMORY;
@@ -267,45 +350,43 @@ OCStackResult JniOcSecureResource::provisionPairwiseDevices(JNIEnv* env, jint ty
 
         if (OC_STACK_OK != JniSecureUtils::convertJavaACLToOCAcl(env, _acl1, acl1))
         {
-            delete acl1;
+            JniSecureUtils::FreeACLList(acl1);
             return OC_STACK_ERROR;
         }
-        acl1->next = nullptr;
     }
 
     if (_acl2)
     {
-        acl2 = new OicSecAcl_t;
+        acl2 = (OicSecAcl_t*)OICCalloc(1, sizeof(OicSecAcl_t));
         if (!acl2)
         {
-            delete acl1;
+            JniSecureUtils::FreeACLList(acl1);
             return OC_STACK_NO_MEMORY;
         }
 
         if (OC_STACK_OK != JniSecureUtils::convertJavaACLToOCAcl(env, _acl2, acl2))
         {
-            delete acl2;
+            JniSecureUtils::FreeACLList(acl1);
+            JniSecureUtils::FreeACLList(acl2);
             return OC_STACK_ERROR;
         }
-        acl2->next = nullptr;
     }
 
     ResultCallBack resultCallback = [acl1, acl2, resultListener](PMResultList_t *result,
             int hasError)
     {
-        delete acl1;
-        delete acl2;
+        JniSecureUtils::FreeACLList(acl1);
+        JniSecureUtils::FreeACLList(acl2);
         resultListener->ProvisionResultCallback(result, hasError,
                 ListenerFunc::PROVISIONPAIRWISEDEVICES);
     };
-
 
     ret = m_sharedSecureResource->provisionPairwiseDevices(cred, acl1,
             *device2->getDevicePtr(), acl2, resultCallback);
     if (ret != OC_STACK_OK)
     {
-        delete acl1;
-        delete acl2;
+        JniSecureUtils::FreeACLList(acl1);
+        JniSecureUtils::FreeACLList(acl2);
     }
     return ret;
 }
@@ -531,6 +612,55 @@ JNIEXPORT void JNICALL Java_org_iotivity_base_OcSecureResource_provisionPairwise
         if (OC_STACK_OK != result)
         {
             ThrowOcException(result, "OcSecureResource_provisionPairwiseDevices");
+            return;
+        }
+    }
+    catch (OCException& e)
+    {
+        LOGE("%s", e.reason().c_str());
+        ThrowOcException(e.code(), e.reason().c_str());
+    }
+}
+
+/*
+ * Class:     org_iotivity_base_OcSecureResource
+ * Method:    provisionDirectPairing
+ * Signature: (Ljava/lang/String;[Lorg/iotivity/base/OicSecPdAcl;ILorg/iotivity/base/OcSecureResource/ProvisionDirectPairingListener;I)V
+ */
+JNIEXPORT void JNICALL Java_org_iotivity_base_OcSecureResource_provisionDirectPairing
+(JNIEnv *env, jobject thiz, jstring jpin, jobjectArray pdacls, jintArray jprmType,
+    jint jedp, jobject jListener)
+{
+    LOGD("OcSecureResource_provisionDirectPairing");
+    if (!jListener || !pdacls || !jpin || ! jprmType)
+    {
+        ThrowOcException(OC_STACK_INVALID_PARAM, "Invalid Parameters");
+        return;
+    }
+    std::string pin = env->GetStringUTFChars(jpin, nullptr);
+
+    JniOcSecureResource *secureResource = JniOcSecureResource::getJniOcSecureResourcePtr(env, thiz);
+    if (!secureResource)
+    {
+        return;
+    }
+
+    const jsize len = env->GetArrayLength(jprmType);
+    jint* ints = env->GetIntArrayElements(jprmType, nullptr);
+    std::vector<int> value;
+    for (jsize i = 0; i < len; ++i)
+    {
+        value.push_back(static_cast<int>(ints[i]));
+    }
+    env->ReleaseIntArrayElements(jprmType, ints, JNI_ABORT);
+
+    try
+    {
+        OCStackResult result = secureResource->provisionDirectPairing(env, pdacls, jListener,
+                pin, value, static_cast<int>(jedp));
+        if (OC_STACK_OK != result)
+        {
+            ThrowOcException(result, "OcSecureResource_provisionDirectPairing");
             return;
         }
     }

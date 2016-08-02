@@ -268,6 +268,31 @@ namespace OC
                     ResultCallBack resultCallback);
 
             /**
+             * API to remove device credential and ACL from all devices in subnet.
+             *
+             * @param resultCallback Callback provided by API user, callback will be called when
+             *            credential revocation is finished.
+             * @param uuid Device uuid to be revoked.
+             * @param waitTimeForOwnedDeviceDiscovery Maximum wait time for owned device
+             *            discovery in seconds.
+             * @return  ::OC_STACK_OK in case of success and other value otherwise.
+             */
+            OCStackResult removeDeviceWithUuid(unsigned short waitTimeForOwnedDeviceDiscovery,
+                    std::string uuid,
+                    ResultCallBack resultCallback);
+
+            /**
+             * API to provision DirectPairing to devices.
+             *
+             * @param pconf pointer to PCONF (Pairing Configuration).
+             * @param resultCallback Callback will be called when provisioning request receives
+             *                           a response from first resource server.
+             * @return  ::OC_STACK_OK in case of success and other value otherwise.
+             */
+            OCStackResult provisionDirectPairing(const OicSecPconf_t *pconf,
+                    ResultCallBack resultCallback);
+
+            /**
              * This method is used to get linked devices' IDs.
              *
              * @param uuidList Information about the list of linked devices uuids.

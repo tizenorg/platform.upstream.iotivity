@@ -41,7 +41,29 @@ extern "C"
  */
 OCStackResult SRPProvisionACL(void *ctx, const OCProvisionDev_t *selectedDeviceInfo,
                                         OicSecAcl_t *acl, OCProvisionResultCB resultCallback);
-                                        
+
+/**
+ * API to request CRED information to resource.
+ *
+ * @param[in] selectedDeviceInfo Selected target device.
+ * @param[in] resultCallback callback provided by API user, callback will be called when
+ *            provisioning request recieves a response from resource server.
+ * @return OC_STACK_OK in case of success and other value otherwise.
+ */
+OCStackResult SRPGetCredResource(void *ctx, const OCProvisionDev_t *selectedDeviceInfo,
+        OCProvisionResultCB resultCallback);
+
+/**
+ * API to request ACL information to resource.
+ *
+ * @param[in] selectedDeviceInfo Selected target device.
+ * @param[in] resultCallback callback provided by API user, callback will be called when
+ *            provisioning request recieves a response from resource server.
+ * @return OC_STACK_OK in case of success and other value otherwise.
+ */
+OCStackResult SRPGetACLResource(void *ctx, const OCProvisionDev_t *selectedDeviceInfo,
+        OCProvisionResultCB resultCallback);
+
 #ifdef __WITH_X509__
 /**
  * API to send CRL information to resource.
@@ -117,6 +139,55 @@ OCStackResult SRPRemoveDevice(void* ctx,
                               unsigned short waitTimeForOwnedDeviceDiscovery,
                               const OCProvisionDev_t* pTargetDev,
                               OCProvisionResultCB resultCallback);
+
+/*
+* Function to device revocation
+* This function will remove credential of target device from all devices in subnet.
+*
+* @param[in] ctx Application context would be returned in result callback
+* @param[in] pOwnedDevList List of owned devices
+* @param[in] pTargetDev Device information to be revoked.
+* @param[in] resultCallback callback provided by API user, callback will be called when
+*            credential revocation is finished.
+* @return  OC_STACK_OK in case of success and other value otherwise.
+*          If OC_STACK_OK is returned, the caller of this API should wait for callback.
+*          OC_STACK_CONTINUE means operation is success but no request is need to be initiated.
+*/
+OCStackResult SRPRemoveDeviceWithoutDiscovery(void* ctx, const OCProvisionDev_t* pOwnedDevList,
+                             const OCProvisionDev_t* pTargetDev, OCProvisionResultCB resultCallback);
+
+/*
+ * Function to sync-up credential and ACL of the target device.
+ * This function will remove credential and ACL of target device from all devices in subnet.
+ *
+ * @param[in] ctx Application context would be returned in result callback
+ * @param[in] waitTimeForOwnedDeviceDiscovery Maximum wait time for owned device discovery.(seconds)
+ * @param[in] pTargetDev Device information to be revoked.
+ * @param[in] resultCallback callback provided by API user, callback will be called when
+ *            credential revocation is finished.
+ *            when there is an error, this user callback is called immediately.
+ * @return OC_STACK_OK in case of success and other value otherwise.
+ *         If OC_STACK_OK is returned, the caller of this API should wait for callback.
+ *         OC_STACK_CONTINUE means operation is success but no request is need to be initiated.
+ */
+OCStackResult SRPSyncDevice(void* ctx, unsigned short waitTimeForOwnedDeviceDiscovery,
+                         const OCProvisionDev_t* pTargetDev, OCProvisionResultCB resultCallback);
+
+/*
+ * Function for remote reset
+ * This function will send pstat POST(modify) message to the target device
+ * to change current mode to reset state in order to initiate remote reset.
+ *
+ * @param[in] pTargetDev Device information to be revoked.
+ * @param[in] resultCallback callback provided by API user, callback will be called when
+ *            credential revocation is finished.
+ *            when there is an error, this user callback is called immediately.
+ * @return OC_STACK_OK in case of success and other value otherwise.
+ *         If OC_STACK_OK is returned, the caller of this API should wait for callback.
+ *         OC_STACK_CONTINUE means operation is success but no request is need to be initiated.
+ */
+OCStackResult SRPResetDevice(const OCProvisionDev_t* pTargetDev,
+        OCProvisionResultCB resultCallback);
 
 #ifdef __cplusplus
 }

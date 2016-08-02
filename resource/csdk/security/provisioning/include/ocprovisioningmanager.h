@@ -117,6 +117,30 @@ OCStackResult OCProvisionACL(void *ctx, const OCProvisionDev_t *selectedDeviceIn
                              OCProvisionResultCB resultCallback);
 
 /**
+ * this function requests CRED information to resource.
+ *
+ * @param[in] ctx Application context would be returned in result callback.
+ * @param[in] selectedDeviceInfo Selected target device.
+ * @param[in] resultCallback callback provided by API user, callback will be called when provisioning
+              request recieves a response from resource server.
+ * @return  OC_STACK_OK in case of success and other value otherwise.
+ */
+OCStackResult OCGetCredResource(void* ctx, const OCProvisionDev_t *selectedDeviceInfo,
+                             OCProvisionResultCB resultCallback);
+/**
+ * this function requests ACL information to resource.
+ *
+ * @param[in] ctx Application context would be returned in result callback.
+ * @param[in] selectedDeviceInfo Selected target device.
+ * @param[in] resultCallback callback provided by API user, callback will be called when provisioning
+              request recieves a response from resource server.
+ * @return  OC_STACK_OK in case of success and other value otherwise.
+ */
+OCStackResult OCGetACLResource(void* ctx, const OCProvisionDev_t *selectedDeviceInfo,
+                             OCProvisionResultCB resultCallback);
+
+
+/**
  * this function sends Direct-Pairing Configuration to a device.
  *
  * @param[in] ctx Application context would be returned in result callback.
@@ -178,6 +202,23 @@ OCStackResult OCRemoveDevice(void* ctx,
                              unsigned short waitTimeForOwnedDeviceDiscovery,
                              const OCProvisionDev_t* pTargetDev,
                              OCProvisionResultCB resultCallback);
+
+/*
+* Function to device revocation
+* This function will remove credential of target device from all devices in subnet.
+*
+* @param[in] ctx Application context would be returned in result callback
+* @param[in] waitTimeForOwnedDeviceDiscovery Maximum wait time for owned device discovery.(seconds)
+* @param[in] pTargetDev Device information to be revoked.
+* @param[in] resultCallback callback provided by API user, callback will be called when
+*            credential revocation is finished.
+ * @return  OC_STACK_OK in case of success and other value otherwise.
+*/
+OCStackResult OCRemoveDeviceWithUuid(void* ctx,
+                                     unsigned short waitTimeForOwnedDeviceDiscovery,
+                                     const OicUuid_t* pTargetUuid,
+                                     OCProvisionResultCB resultCallback);
+
 /**
  * API to get status of all the devices in current subnet. The status include endpoint information
  * and doxm information which can be extracted duing owned and unowned discovery. Along with this

@@ -1,3 +1,4 @@
+# -*- mode: python; python-indent-offset: 4; indent-tabs-mode: nil -*-
 # //******************************************************************
 # //
 # // Copyright 2015 Intel Mobile Communications GmbH All Rights Reserved.
@@ -22,9 +23,10 @@
 ##
 
 Import('env')
+import os
 
 lib_env = env.Clone()
-SConscript(env.get('SRC_DIR') + '/resource/third_party_libs.scons', 'lib_env')
+SConscript('#resource/third_party_libs.scons', 'lib_env')
 
 libocsrm_env = lib_env.Clone()
 
@@ -65,23 +67,23 @@ if target_os not in ['windows', 'winrt']:
 	libocsrm_env.AppendUnique(CFLAGS = ['-Wall'])
 
 libocsrm_env.AppendUnique(LIBPATH = [env.get('BUILD_DIR')])
-libocsrm_env.AppendUnique(LIBS = ['coap', 'm'])
 
 if target_os == 'arduino':
 	libocsrm_env.AppendUnique(CPPDEFINES = ['NDEBUG', 'WITH_ARDUINO'])
-else:
+elif target_os not in ['windows', 'msys_nt']:
 	libocsrm_env.AppendUnique(CFLAGS = ['-fPIC'])
+	libocsrm_env.AppendUnique(LIBS = ['m'])
 
 if target_os in ['darwin', 'ios']:
 	libocsrm_env.AppendUnique(CPPDEFINES = ['_DARWIN_C_SOURCE'])
 	libocsrm_env.AppendUnique(LIBPATH = [env.get('BUILD_DIR')])
 	libocsrm_env.AppendUnique(LIBS = ['coap'])
 
-if not env.get('RELEASE'):
-	libocsrm_env.AppendUnique(CPPDEFINES = ['TB_LOG'])
-
 if env.get('DTLS_WITH_X509') == '1':
 	libocsrm_env.AppendUnique(CPPDEFINES = ['__WITH_X509__'])
+
+if libocsrm_env.get('LOGGING'):
+    libocsrm_env.AppendUnique(CPPDEFINES = ['TB_LOG'])
 
 ######################################################################
 # Source files and Targets

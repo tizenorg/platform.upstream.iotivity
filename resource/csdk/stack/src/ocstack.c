@@ -51,6 +51,7 @@
 #include "logger.h"
 #include "ocserverrequest.h"
 #include "secureresourcemanager.h"
+#include "psinterface.h"
 #include "doxmresource.h"
 #include "cacommon.h"
 #include "cainterface.h"
@@ -131,10 +132,6 @@ static bool gRASetInfo = false;
 OCDeviceEntityHandler defaultDeviceHandler;
 void* defaultDeviceHandlerCallbackParameter = NULL;
 static const char COAP_TCP[] = "coap+tcp:";
-
-//#ifdef DIRECT_PAIRING
-OCDirectPairingCB gDirectpairingCallback = NULL;
-//#endif
 
 //-----------------------------------------------------------------------------
 // Macros
@@ -523,7 +520,8 @@ OCStackResult OCStackFeedBack(CAToken_t token, uint8_t tokenLength, uint8_t stat
                                                 NULL, PAYLOAD_TYPE_REPRESENTATION,
                                                 NULL, 0, 0, NULL,
                                                 OC_OBSERVE_DEREGISTER,
-                                                observer->observeId);
+                                                observer->observeId,
+                                                0);
             if(result != OC_STACK_OK)
             {
                 return result;
@@ -574,7 +572,8 @@ OCStackResult OCStackFeedBack(CAToken_t token, uint8_t tokenLength, uint8_t stat
                                                     NULL, PAYLOAD_TYPE_REPRESENTATION,
                                                     NULL, 0, 0, NULL,
                                                     OC_OBSERVE_DEREGISTER,
-                                                    observer->observeId);
+                                                    observer->observeId,
+                                                    0);
                 if(result != OC_STACK_OK)
                 {
                     return OC_STACK_ERROR;
@@ -622,6 +621,8 @@ OCStackResult CAToOCStackResult(CAResponseResult_t caCode)
             ret = OC_STACK_RESOURCE_DELETED;
             break;
         case CA_CHANGED:
+            ret = OC_STACK_RESOURCE_CHANGED;
+            break;
         case CA_CONTENT:
         case CA_VALID:
             ret = OC_STACK_OK;
@@ -1128,7 +1129,7 @@ void OCHandleResponse(const CAEndpoint_t* endPoint, const CAResponseInfo_t* resp
 
             OCClientResponse response =
                 {.devAddr = {.adapter = OC_DEFAULT_ADAPTER}};
-            response.sequenceNumber = OC_OBSERVE_NO_OPTION;
+            response.sequenceNumber = MAX_SEQUENCE_NUMBER + 1;
             CopyEndpointToDevAddr(endPoint, &response.devAddr);
             FixUpClientResponse(&response);
             response.resourceUri = responseInfo->info.resourceUri;
@@ -1275,6 +1276,7 @@ void OCHandleResponse(const CAEndpoint_t* endPoint, const CAResponseInfo_t* resp
 
             if (cbNode->method == OC_REST_OBSERVE &&
                 response.sequenceNumber > OC_OFFSET_SEQUENCE_NUMBER &&
+                cbNode->sequenceNumber <=  MAX_SEQUENCE_NUMBER &&
                 response.sequenceNumber <= cbNode->sequenceNumber)
             {
                 OIC_LOG_V(INFO, TAG, "Received stale notification. Number :%d",
@@ -1353,7 +1355,7 @@ void OCHandleResponse(const CAEndpoint_t* endPoint, const CAResponseInfo_t* resp
             {
                 OIC_LOG(INFO, TAG, "Received a message without callbacks. Sending RESET");
                 SendDirectStackResponse(endPoint, responseInfo->info.messageId, CA_EMPTY,
-                        CA_MSG_RESET, 0, NULL, NULL, 0, NULL);
+                                        CA_MSG_RESET, 0, NULL, NULL, 0, NULL);
             }
         }
 
@@ -1796,7 +1798,7 @@ void OCHandleRequests(const CAEndpoint_t* endPoint, const CARequestInfo_t* reque
                                     CA_MSG_ACKNOWLEDGE,0, NULL, NULL, 0, NULL);
         }
     }
-    else if(requestResult != OC_STACK_OK)
+    else if(!OCResultToSuccess(requestResult))
     {
         OIC_LOG_V(ERROR, TAG, "HandleStackRequests failed. error: %d", requestResult);
 
@@ -2039,7 +2041,7 @@ OCStackResult OCInit1(OCMode mode, OCTransportFlags serverFlags, OCTransportFlag
     VERIFY_SUCCESS(result, OC_STACK_OK);
 
 #ifdef TCP_ADAPTER
-    CARegisterKeepAliveHandler(HandleKeepAliveConnCB, HandleKeepAliveDisconnCB);
+    CARegisterKeepAliveHandler(HandleKeepAliveConnCB);
 #endif
 
 #ifdef WITH_PRESENCE
@@ -2294,7 +2296,15 @@ static OCStackResult ParseRequestUri(const char *fullUri,
             {
                 colon = close + 1;
             }
-            adapter = (OCTransportAdapter)(adapter | OC_ADAPTER_IP);
+
+            if (istcp)
+            {
+                adapter = (OCTransportAdapter)(adapter | OC_ADAPTER_TCP);
+            }
+            else
+            {
+                adapter = (OCTransportAdapter)(adapter | OC_ADAPTER_IP);
+            }
             flags = (OCTransportFlags)(flags | OC_IP_USE_V6);
         }
         else
@@ -2306,14 +2316,15 @@ static OCStackResult ParseRequestUri(const char *fullUri,
                 end = (colon && colon < slash) ? colon : slash;
 
                 if (istcp)
-                {   // coap over tcp
+                {
+                    // coap over tcp
                     adapter = (OCTransportAdapter)(adapter | OC_ADAPTER_TCP);
                 }
                 else
                 {
                     adapter = (OCTransportAdapter)(adapter | OC_ADAPTER_IP);
-                    flags = (OCTransportFlags)(flags | OC_IP_USE_V4);
                 }
+                flags = (OCTransportFlags)(flags | OC_IP_USE_V4);
             }
             else
             {   // MAC address
@@ -2724,9 +2735,11 @@ OCStackResult OCCancel(OCDoHandle handle, OCQualityOfService qos, OCHeaderOption
         case OC_REST_OBSERVE:
         case OC_REST_OBSERVE_ALL:
 
-            OIC_LOG_V(INFO, TAG, "Canceling observation for resource %s",
-                                        clientCB->requestUri);
-            if (qos != OC_HIGH_QOS)
+            OIC_LOG_V(INFO, TAG, "Canceling observation for resource %s", clientCB->requestUri);
+
+            CopyDevAddrToEndpoint(clientCB->devAddr, &endpoint);
+
+            if ((endpoint.adapter & CA_ADAPTER_IP) && qos != OC_HIGH_QOS)
             {
                 FindAndDeleteClientCB(clientCB);
                 break;
@@ -2746,7 +2759,6 @@ OCStackResult OCCancel(OCDoHandle handle, OCQualityOfService qos, OCHeaderOption
             requestInfo.info.numOptions = numOptions + 1;
             requestInfo.info.resourceUri = OICStrdup (clientCB->requestUri);
 
-            CopyDevAddrToEndpoint(clientCB->devAddr, &endpoint);
 
             ret = OCSendRequest(&endpoint, &requestInfo);
 
@@ -3050,8 +3062,6 @@ OCStackResult OCSetDeviceInfo(OCDeviceInfo deviceInfo)
         {
             return OC_STACK_INVALID_PARAM;
         }
-        deleteResourceType(resource->rsrcType);
-        resource->rsrcType = NULL;
 
         while (type)
         {
@@ -3911,16 +3921,7 @@ const OCDPDev_t* OCGetDirectPairedDevices()
     return (const OCDPDev_t*)DPGetPairedDevices();
 }
 
-void DirectPairingCB (OCDirectPairingDev_t * peer, OCStackResult result)
-{
-    if (gDirectpairingCallback)
-    {
-        gDirectpairingCallback((OCDPDev_t*)peer, result);
-        gDirectpairingCallback = NULL;
-    }
-}
-
-OCStackResult OCDoDirectPairing(OCDPDev_t* peer, OCPrm_t pmSel, char *pinNumber,
+OCStackResult OCDoDirectPairing(void *ctx, OCDPDev_t* peer, OCPrm_t pmSel, char *pinNumber,
                                                      OCDirectPairingCB resultCallback)
 {
     OIC_LOG(INFO, TAG, "Start OCDoDirectPairing");
@@ -3935,9 +3936,8 @@ OCStackResult OCDoDirectPairing(OCDPDev_t* peer, OCPrm_t pmSel, char *pinNumber,
         return OC_STACK_INVALID_CALLBACK;
     }
 
-    gDirectpairingCallback = resultCallback;
-    return DPDirectPairing((OCDirectPairingDev_t*)peer, (OicSecPrm_t)pmSel,
-                                           pinNumber, DirectPairingCB);
+    return DPDirectPairing(ctx, (OCDirectPairingDev_t*)peer, (OicSecPrm_t)pmSel,
+                                           pinNumber, (OCDirectPairingResultCB)resultCallback);
 }
 //#endif // DIRECT_PAIRING
 
@@ -4014,6 +4014,7 @@ OCStackResult initResources()
 
     if(result == OC_STACK_OK)
     {
+        CreateResetProfile();
         result = OCCreateResource(&deviceResource,
                                   OC_RSRVD_RESOURCE_TYPE_DEVICE,
                                   OC_RSRVD_INTERFACE_DEFAULT,
@@ -4573,5 +4574,19 @@ OCStackResult CAResultToOCResult(CAResult_t caResult)
             return OC_STACK_NOTIMPL;
         default:
             return OC_STACK_ERROR;
+    }
+}
+
+bool OCResultToSuccess(OCStackResult ocResult)
+{
+    switch (ocResult)
+    {
+        case OC_STACK_OK:
+        case OC_STACK_RESOURCE_CREATED:
+        case OC_STACK_RESOURCE_DELETED:
+        case OC_STACK_CONTINUE:
+            return true;
+        default:
+            return false;
     }
 }

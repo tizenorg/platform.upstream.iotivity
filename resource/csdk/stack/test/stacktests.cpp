@@ -85,10 +85,11 @@ extern "C"  OCStackApplicationResult asyncDoResourcesCallback(void* ctx,
     return OC_STACK_KEEP_TRANSACTION;
 }
 
-static void resultCallback(OCDPDev_t *UNUSED1, OCStackResult UNUSED2)
+static void resultCallback(void *UNUSED1, OCDPDev_t *UNUSED2, OCStackResult UNUSED3)
 {
     (void) (UNUSED1);
     (void) (UNUSED2);
+    (void) (UNUSED3);
 }
 
 extern "C" OCStackApplicationResult discoveryCallback(void* ctx,
@@ -351,7 +352,7 @@ TEST(StackDiscovery, DISABLED_DoResourceDeviceDiscovery)
     InitStack(OC_CLIENT);
 
     /* Start a discovery query*/
-    char szQueryUri[64] = { 0 };
+    char szQueryUri[MAX_QUERY_LENGTH] = { 0 };
     strcpy(szQueryUri, OC_RSRVD_WELL_KNOWN_URI);
     cbData.cb = asyncDoResourcesCallback;
     cbData.context = (void*)DEFAULT_CONTEXT_VALUE;
@@ -393,7 +394,7 @@ TEST(StackResource, DISABLED_UpdateResourceNullURI)
     InitStack(OC_CLIENT);
 
     /* Start a discovery query*/
-    char szQueryUri[64] = { 0 };
+    char szQueryUri[MAX_QUERY_LENGTH] = { 0 };
     strcpy(szQueryUri, OC_RSRVD_WELL_KNOWN_URI);
     cbData.cb = asyncDoResourcesCallback;
     cbData.context = (void*)DEFAULT_CONTEXT_VALUE;
@@ -1680,17 +1681,17 @@ TEST(PODTests, OCCallbackData)
 
 TEST(OCDoDirectPairingTests, Nullpeer)
 {
-    EXPECT_EQ(OC_STACK_INVALID_PARAM,OCDoDirectPairing(NULL, pmSel, &pinNumber, &resultCallback));
+    EXPECT_EQ(OC_STACK_INVALID_PARAM,OCDoDirectPairing(NULL, NULL, pmSel, &pinNumber, &resultCallback));
 }
 
 TEST(OCDoDirectPairingTests, NullCallback)
 {
-    EXPECT_EQ(OC_STACK_INVALID_CALLBACK,OCDoDirectPairing(&peer, pmSel, &pinNumber, NULL));
+    EXPECT_EQ(OC_STACK_INVALID_CALLBACK,OCDoDirectPairing(NULL, &peer, pmSel, &pinNumber, NULL));
 }
 
 TEST(OCDoDirectPairingTests, NullpinNumber)
 {
-    EXPECT_EQ(OC_STACK_INVALID_PARAM,OCDoDirectPairing(&peer, pmSel, NULL, &resultCallback));
+    EXPECT_EQ(OC_STACK_INVALID_PARAM,OCDoDirectPairing(NULL, &peer, pmSel, NULL, &resultCallback));
 }
 
 TEST(StackResource, MultipleResourcesDiscovery)
@@ -1725,7 +1726,7 @@ TEST(StackResource, MultipleResourcesDiscovery)
                                             NULL,
                                             OC_DISCOVERABLE|OC_OBSERVABLE));
     /* Start a discovery query*/
-    char szQueryUri[256] = "/oic/res?if=oic.if.ll";
+    char szQueryUri[MAX_QUERY_LENGTH] = "/oic/res?if=oic.if.ll";
     OCCallbackData cbData;
     cbData.cb = discoveryCallback;
     cbData.context = (void*)DEFAULT_CONTEXT_VALUE;

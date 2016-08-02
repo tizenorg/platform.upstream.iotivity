@@ -14,8 +14,8 @@ host_target_map = {
 
 # Map of os and allowed archs (os: allowed archs)
 os_arch_map = {
-		'linux': ['x86', 'x86_64', 'arm', 'arm64'],
-		'tizen': ['x86', 'x86_64', 'arm', 'arm64', 'armeabi-v7a'],
+		'linux': ['x86', 'x86_64', 'arm', 'arm-v7a', 'arm64'],
+		'tizen': ['x86', 'x86_64', 'arm', 'arm-v7a', 'armeabi-v7a', 'arm64'],
 		'android': ['x86', 'x86_64', 'armeabi', 'armeabi-v7a', 'armeabi-v7a-hard', 'arm64-v8a'],
 		'windows': ['x86', 'amd64', 'arm'],
 		'winrt': ['arm'],
@@ -180,6 +180,14 @@ if target_os in targets_support_cc:
 	if prefix or tc_path:
 		print tc_set_msg
 
+# If cross-compiling, honor environment settings for toolchain to avoid picking up native tools
+if os.environ.get('PKG_CONFIG') != None:
+	env["ENV"]["PKG_CONFIG"] = os.environ.get("PKG_CONFIG")
+if os.environ.get('PKG_CONFIG_PATH') != None:
+	env["ENV"]["PKG_CONFIG_PATH"] = os.environ.get("PKG_CONFIG_PATH")
+if os.environ.get('PKG_CONFIG_SYSROOT_DIR') != None:
+	env["ENV"]["PKG_CONFIG_SYSROOT_DIR"] = os.environ.get("PKG_CONFIG_SYSROOT_DIR")
+
 # Ensure scons be able to change its working directory
 env.SConscriptChdir(1)
 
@@ -303,14 +311,14 @@ if not user_lib:
 if user_prefix:
 	pc_vars = {'\@PREFIX\@': user_prefix,
 				'\@EXEC_PREFIX\@':user_prefix,
-				'\@VERSION\@': '1.0.1',
+				'\@VERSION\@': '1.1.1',
 				'\@LIB_INSTALL_DIR\@': user_lib,
 				'\@ROUTING_DEFINE\@': routing_define
 				}
 else:
 	pc_vars = {'\@PREFIX\@': env.get('BUILD_DIR'),
 				'\@EXEC_PREFIX\@': env.get('BUILD_DIR'),
-				'\@VERSION\@': '1.0.1',
+				'\@VERSION\@': '1.1.1',
 				'\@LIB_INSTALL_DIR\@': user_lib,
 				'\@ROUTING_DEFINE\@': routing_define
 				}
@@ -375,8 +383,7 @@ if target_os == "yocto":
     env.AppendUnique(CPPDEFINES = ['WITH_POSIX', '__linux__', '_GNU_SOURCE'])
     env.AppendUnique(CFLAGS = ['-std=gnu99'])
     env.AppendUnique(CCFLAGS = ['-Wall', '-Wextra', '-fPIC'])
-    env.AppendUnique(LINKFLAGS = ['-ldl', '-lpthread'])
-    env.AppendUnique(LIBS = ['uuid'])
+    env.AppendUnique(LIBS = ['dl', 'pthread', 'uuid'])
     Export('env')
 else:
     '''

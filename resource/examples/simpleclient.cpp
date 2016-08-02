@@ -29,6 +29,8 @@
 #include "OCPlatform.h"
 #include "OCApi.h"
 
+#define maxSequenceNumber 0xFFFFFF
+
 using namespace OC;
 
 static const char* SVR_DB_FILE_NAME = "./oic_svr_db_client.dat";
@@ -65,15 +67,11 @@ void onObserve(const HeaderOptions /*headerOptions*/, const OCRepresentation& re
 {
     try
     {
-        if(eCode == OC_STACK_OK && sequenceNumber != OC_OBSERVE_NO_OPTION)
+        if(eCode == OC_STACK_OK && sequenceNumber != maxSequenceNumber + 1)
         {
             if(sequenceNumber == OC_OBSERVE_REGISTER)
             {
                 std::cout << "Observe registration action is successful" << std::endl;
-            }
-            else if(sequenceNumber == OC_OBSERVE_DEREGISTER)
-            {
-                std::cout << "Observe De-registration action is successful" << std::endl;
             }
 
             std::cout << "OBSERVE RESULT:"<<std::endl;
@@ -99,9 +97,9 @@ void onObserve(const HeaderOptions /*headerOptions*/, const OCRepresentation& re
         }
         else
         {
-            if(sequenceNumber == OC_OBSERVE_NO_OPTION)
+            if(eCode == OC_STACK_OK)
             {
-                std::cout << "Observe registration or de-registration action is failed" << std::endl;
+                std::cout << "Observe registration failed or de-registration action failed/succeeded" << std::endl;
             }
             else
             {
@@ -122,7 +120,8 @@ void onPost2(const HeaderOptions& /*headerOptions*/,
 {
     try
     {
-        if(eCode == OC_STACK_OK || eCode == OC_STACK_RESOURCE_CREATED)
+        if(eCode == OC_STACK_OK || eCode == OC_STACK_RESOURCE_CREATED
+                || eCode == OC_STACK_RESOURCE_CHANGED)
         {
             std::cout << "POST request was successful" << std::endl;
 
@@ -168,7 +167,8 @@ void onPost(const HeaderOptions& /*headerOptions*/,
 {
     try
     {
-        if(eCode == OC_STACK_OK || eCode == OC_STACK_RESOURCE_CREATED)
+        if(eCode == OC_STACK_OK || eCode == OC_STACK_RESOURCE_CREATED
+                || eCode == OC_STACK_RESOURCE_CHANGED)
         {
             std::cout << "POST request was successful" << std::endl;
 
@@ -237,7 +237,7 @@ void onPut(const HeaderOptions& /*headerOptions*/, const OCRepresentation& rep, 
 {
     try
     {
-        if(eCode == OC_STACK_OK)
+        if (eCode == OC_STACK_OK || eCode == OC_STACK_RESOURCE_CHANGED)
         {
             std::cout << "PUT request was successful" << std::endl;
 
@@ -469,7 +469,7 @@ int main(int argc, char* argv[]) {
         OC::ModeType::Both,
         "0.0.0.0",
         0,
-        OC::QualityOfService::LowQos,
+        OC::QualityOfService::HighQos,
         &ps
     };
 

@@ -197,6 +197,9 @@ extern "C" {
 /** Port. */
 #define OC_RSRVD_HOSTING_PORT           "port"
 
+/** TCP Port. */
+#define OC_RSRVD_TCP_PORT               "x.org.iotivity.tcp"
+
 /** For Server instance ID.*/
 #define OC_RSRVD_SERVER_INSTANCE_ID     "sid"
 
@@ -374,14 +377,14 @@ typedef enum
     OC_FLAG_SECURE     = (1 << 4),
 
     /** IPv4 & IPv6 auto-selection is the default.*/
-    /** IP adapter only.*/
+    /** IP & TCP adapter only.*/
     OC_IP_USE_V6       = (1 << 5),
 
-    /** IP adapter only.*/
+    /** IP & TCP adapter only.*/
     OC_IP_USE_V4       = (1 << 6),
 
-    /** internal use only.*/
-    OC_RESERVED1       = (1 << 7),   // internal use only
+    /** Multicast only.*/
+    OC_MULTICAST       = (1 << 7),
 
     /** Link-Local multicast is the default multicast scope for IPv6.
      *  These are placed here to correspond to the IPv6 multicast address bits.*/
@@ -575,11 +578,11 @@ typedef enum
     /** De-register observation, intended for internal use.*/
     OC_REST_CANCEL_OBSERVE = (1 << 6),
 
-    #ifdef WITH_PRESENCE
+#ifdef WITH_PRESENCE
     /** Subscribe for all presence notifications of a particular resource.*/
     OC_REST_PRESENCE       = (1 << 7),
 
-    #endif
+#endif
     /** Allows OCDoResource caller to do discovery.*/
     OC_REST_DISCOVER       = (1 << 8)
 } OCMethod;
@@ -655,8 +658,12 @@ typedef enum
      *  processing its requests from clients.*/
     OC_SLOW          = (1 << 3),
 
+#ifdef __WITH_DTLS__
     /** When this bit is set, the resource is a secure resource.*/
     OC_SECURE        = (1 << 4),
+#else
+    OC_SECURE        = (0),
+#endif
 
     /** When this bit is set, the resource is allowed to be discovered only
      *  if discovery request contains an explicit querystring.
@@ -686,6 +693,7 @@ typedef enum
     OC_STACK_RESOURCE_CREATED,
     OC_STACK_RESOURCE_DELETED,
     OC_STACK_CONTINUE,
+    OC_STACK_RESOURCE_CHANGED,
     /** Success status code - END HERE.*/
 
     /** Error status code - START HERE.*/
@@ -741,11 +749,11 @@ typedef enum
     OC_STACK_AUTHENTICATION_FAILURE,
 
     /** Insert all new error codes here!.*/
-    #ifdef WITH_PRESENCE
+#ifdef WITH_PRESENCE
     OC_STACK_PRESENCE_STOPPED = 128,
     OC_STACK_PRESENCE_TIMEOUT,
     OC_STACK_PRESENCE_DO_NOT_HANDLE,
-    #endif
+#endif
     /** ERROR in stack.*/
     OC_STACK_ERROR = 255
     /** Error status code - END HERE.*/
@@ -833,11 +841,21 @@ typedef enum
 {
     OC_EH_OK = 0,
     OC_EH_ERROR,
-    OC_EH_RESOURCE_CREATED,
-    OC_EH_RESOURCE_DELETED,
-    OC_EH_SLOW,
-    OC_EH_FORBIDDEN,
-    OC_EH_RESOURCE_NOT_FOUND
+    OC_EH_RESOURCE_CREATED, // 2.01
+    OC_EH_RESOURCE_DELETED, // 2.02
+    OC_EH_SLOW, // 2.05
+    OC_EH_FORBIDDEN, // 4.03
+    OC_EH_RESOURCE_NOT_FOUND, // 4.04
+    OC_EH_VALID,   // 2.03
+    OC_EH_CHANGED, // 2.04
+    OC_EH_CONTENT, // 2.05
+    OC_EH_BAD_REQ, // 4.00
+    OC_EH_UNAUTHORIZED_REQ, // 4.01
+    OC_EH_BAD_OPT, // 4.02
+    OC_EH_METHOD_NOT_ALLOWED, // 4.05
+    OC_EH_NOT_ACCEPTABLE, // 4.06
+    OC_EH_INTERNAL_SERVER_ERROR, // 5.00
+    OC_EH_RETRANSMIT_TIMEOUT // 5.04
 } OCEntityHandlerResult;
 
 /**
@@ -931,6 +949,10 @@ typedef struct
     char *deviceName;
     /** Pointer to the types.*/
     OCStringLL *types;
+    /** Pointer to the device specification version.*/
+    char *specVersion;
+    /** Pointer to the device data model versions (in CSV format).*/
+    OCStringLL *dataModelVersions;
 } OCDeviceInfo;
 
 #ifdef RA_ADAPTER
@@ -1073,6 +1095,9 @@ typedef struct OCResourcePayload
     uint8_t bitmap;
     bool secure;
     uint16_t port;
+#ifdef TCP_ADAPTER
+    uint16_t tcpPort;
+#endif
     struct OCResourcePayload* next;
 } OCResourcePayload;
 
@@ -1175,7 +1200,7 @@ typedef struct
     char *uri;
 
     /** Resource Type */
-    char *type;
+    OCStringLL *type;
 
     /** Interface */
     OCStringLL *interface;
@@ -1216,7 +1241,7 @@ typedef struct
     char *sid;
     char* deviceName;
     char* specVersion;
-    char* dataModelVersion;
+    OCStringLL *dataModelVersions;
     OCStringLL *interfaces;
     OCStringLL *types;
 } OCDevicePayload;
@@ -1226,7 +1251,7 @@ typedef struct
     OCPayload base;
     char* uri;
     OCPlatformInfo info;
-    char* rt;
+    OCStringLL* rt;
     OCStringLL* interfaces;
 } OCPlatformPayload;
 
@@ -1280,6 +1305,9 @@ typedef struct
 
     /** Pointer to the array of the received vendor specific header options.*/
     OCHeaderOption * rcvdVendorSpecificHeaderOptions;
+
+    /** Message id.*/
+    uint16_t messageID;
 
     /** the payload from the request PDU.*/
     OCPayload *payload;
@@ -1467,11 +1495,12 @@ typedef OCEntityHandlerResult (*OCDeviceEntityHandler)
 /**
  * Callback function definition of direct-pairing
  *
+ * @param[OUT] ctx - user context returned in the callback.
  * @param[OUT] peer - pairing device info.
  * @param[OUT} result - It's returned with 'OC_STACK_XXX'. It will return 'OC_STACK_OK'
  *                                   if D2D pairing is success without error
  */
-typedef void (*OCDirectPairingCB)(OCDPDev_t *peer, OCStackResult result);
+typedef void (*OCDirectPairingCB)(void *ctx, OCDPDev_t *peer, OCStackResult result);
 //#endif // DIRECT_PAIRING
 
 #ifdef __cplusplus

@@ -66,8 +66,8 @@ extern void* defaultDeviceHandlerCallbackParameter;
 /** The coap scheme */
 #define OC_COAP_SCHEME "coap://"
 
-/** the first outgoing sequence number will be 5*/
-#define OC_OFFSET_SEQUENCE_NUMBER (4)
+/** the first outgoing sequence number will be 1*/
+#define OC_OFFSET_SEQUENCE_NUMBER (0)
 
 /**
  * This structure will be created in occoap and passed up the stack on the server side.
@@ -264,6 +264,14 @@ OCStackResult BindResourceTypeToResource(OCResource* resource,
  * @return OCStackResult that was converted from the input CAResult_t value.
  */
 OCStackResult CAResultToOCResult(CAResult_t caResult);
+
+/**
+ * Converts a OCStackResult type to a bool type.
+ *
+ * @param ocResult OCStackResult value to convert.
+ * @return true on success, false upon failure.
+ */
+bool OCResultToSuccess(OCStackResult ocResult);
 
 /**
  * Map OCQualityOfService to CAMessageType.
