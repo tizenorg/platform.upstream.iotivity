@@ -20,6 +20,12 @@ BuildRequires:  pkgconfig(glib-2.0)
 BuildRequires:  pkgconfig(sqlite3)
 Requires(postun): /sbin/ldconfig
 Requires(post): /sbin/ldconfig
+%ifarch armv7l
+BuildRequires: python-accel-armv7l
+%endif
+%ifarch aarch64
+BuildRequires: python-accel-aarch64
+%endif
 
 
 ## If tizen 2.x, RELEASE follows tizen_build_binary_release_type_eng. ##
@@ -102,7 +108,7 @@ cp %{SOURCE1001} ./%{name}-test.manifest
 %define RPM_ARCH "x86"
 %endif
 
-scons -j2 --prefix=%{_prefix} \
+scons %{?_smp_mflags} --prefix=%{_prefix} \
 	VERBOSE=%{VERBOSE} \
 	TARGET_OS=tizen TARGET_ARCH=%{RPM_ARCH} TARGET_TRANSPORT=%{TARGET_TRANSPORT} \
 	RELEASE=%{RELEASE} SECURED=1 LOGGING=%{LOGGING} ROUTING=%{ROUTING} \
