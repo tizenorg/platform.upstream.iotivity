@@ -75,6 +75,7 @@ bool OCRepPayloadSetUri(OCRepPayload* payload, const char* uri);
 
 bool OCRepPayloadAddResourceType(OCRepPayload* payload, const char* resourceType);
 bool OCRepPayloadAddInterface(OCRepPayload* payload, const char* interface);
+bool OCRepPayloadAddModelVersion(OCRepPayload* payload, const char* dmv);
 
 bool OCRepPayloadAddResourceTypeAsOwner(OCRepPayload* payload, char* resourceType);
 bool OCRepPayloadAddInterfaceAsOwner(OCRepPayload* payload, char* interface);
@@ -223,7 +224,7 @@ OCSecurityPayload* OCSecurityPayloadCreate(const uint8_t* securityData, size_t s
 void OCSecurityPayloadDestroy(OCSecurityPayload* payload);
 
 void OCDiscoveryPayloadAddResource(OCDiscoveryPayload* payload, const OCResource* res,
-        uint16_t port);
+                                   uint16_t securePort, uint16_t tcpPort);
 void OCDiscoveryPayloadAddNewResource(OCDiscoveryPayload* payload, OCResourcePayload* res);
 bool OCResourcePayloadAddStringLL(OCStringLL **payload, const char* type);
 
@@ -252,6 +253,22 @@ void OCPresencePayloadDestroy(OCPresencePayload* payload);
 // Helper API
 OCStringLL* CloneOCStringLL (OCStringLL* ll);
 void OCFreeOCStringLL(OCStringLL* ll);
+
+/**
+ * This function creates a list from a string (with separated contents if several)
+ * @param text         single string or CSV text fields
+ * @return newly allocated linked list
+ * @note separator is ',' (according to rfc4180, ';' is not valid)
+ **/
+OCStringLL* OCCreateOCStringLL(const char* text);
+
+/**
+ * This function creates a string from a list (with separated contents if several)
+ * @param ll           Pointer to list
+ * @return newly allocated string
+ * @note separator is ',' (according to rfc4180)
+ **/
+char* OCCreateString(const OCStringLL* ll);
 
 #ifdef __cplusplus
 }

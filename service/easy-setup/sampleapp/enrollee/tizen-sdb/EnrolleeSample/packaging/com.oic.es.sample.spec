@@ -1,9 +1,10 @@
 %define PREFIX /usr/apps/com.oic.es.sample
 %define ROOTDIR  %{_builddir}/%{name}-%{version}
+%{!?VERBOSE: %define VERBOSE 1}
 
 Name: com-oic-es-sample
-Version:    0.1
-Release:    1
+Version:    1.1.1
+Release:    0
 Summary: Tizen adapter interfacesample application
 URL: http://slp-source.sec.samsung.net
 Source: %{name}-%{version}.tar.gz
@@ -31,7 +32,7 @@ EasySetup Sample application
 
 %build
 
-scons TARGET_OS=tizen LOGGING=True TARGET_TRANSPORT=%{TARGET_TRANSPORT} SECURED=%{SECURED} RELEASE=%{RELEASE} ROUTING=%{ROUTING} ES_ROLE=%{ES_ROLE} ES_TARGET_ENROLLEE=%{ES_TARGET_ENROLLEE} ES_SOFTAP_MODE=%{ES_SOFTAP_MODE}
+scons VERBOSE=%{VERBOSE} TARGET_OS=tizen LOGGING=True TARGET_TRANSPORT=%{TARGET_TRANSPORT} SECURED=%{SECURED} RELEASE=%{RELEASE} ROUTING=%{ROUTING} ES_ROLE=%{ES_ROLE} ES_TARGET_ENROLLEE=%{ES_TARGET_ENROLLEE} ES_SOFTAP_MODE=%{ES_SOFTAP_MODE}
 
 %install
 

@@ -1,5 +1,5 @@
 Name: iotivity
-Version: 1.1.0
+Version: 1.1.1
 Release: 0
 Summary: IoT Connectivity sponsored by the OIC
 Group: Network & Connectivity/Other
@@ -36,6 +36,7 @@ Requires(post): /sbin/ldconfig
 %{!?ES_TARGET_ENROLLEE: %define ES_TARGET_ENROLLEE tizen}
 %{!?ES_ROLE: %define ES_ROLE enrollee}
 %{!?ES_SOFTAP_MODE: %define ES_SOFTAP_MODE MEDIATOR_SOFTAP}
+%{!?VERBOSE: %define VERBOSE 0}
 
 %description
 An open source reference implementation of the OIC standard specifications
@@ -101,8 +102,8 @@ cp %{SOURCE1001} ./%{name}-test.manifest
 %define RPM_ARCH "x86"
 %endif
 
-#VERBOSE=1
 scons -j2 --prefix=%{_prefix} \
+	VERBOSE=%{VERBOSE} \
 	TARGET_OS=tizen TARGET_ARCH=%{RPM_ARCH} TARGET_TRANSPORT=%{TARGET_TRANSPORT} \
 	RELEASE=%{RELEASE} SECURED=1 LOGGING=%{LOGGING} ROUTING=%{ROUTING} \
 	ES_TARGET_ENROLLEE=%{ES_TARGET_ENROLLEE} ES_ROLE=%{ES_ROLE} ES_SOFTAP_MODE=%{ES_SOFTAP_MODE} \
@@ -152,6 +153,10 @@ cp out/tizen/*/%{build_mode}/resource/examples/oic_svr_db_client.dat %{ex_instal
 mkdir -p %{ex_install_dir}/provisioning
 cp out/tizen/*/%{build_mode}/resource/csdk/security/provisioning/sample/provisioningclient %{ex_install_dir}/provisioning/
 cp out/tizen/*/%{build_mode}/resource/csdk/security/provisioning/sample/oic_svr_db_client.dat %{ex_install_dir}/provisioning/
+cp out/tizen/*/%{build_mode}/resource/csdk/security/provisioning/sample/sampleserver_justworks %{ex_install_dir}/provisioning/
+cp out/tizen/*/%{build_mode}/resource/csdk/security/provisioning/sample/oic_svr_db_server_justworks.dat %{ex_install_dir}/provisioning/
+cp out/tizen/*/%{build_mode}/resource/csdk/security/provisioning/sample/sampleserver_randompin %{ex_install_dir}/provisioning/
+cp out/tizen/*/%{build_mode}/resource/csdk/security/provisioning/sample/oic_svr_db_server_randompin.dat %{ex_install_dir}/provisioning/
 
 cp ./resource/csdk/security/include/pinoxmcommon.h %{buildroot}%{_includedir}
 cp ./resource/csdk/security/include/securevirtualresourcetypes.h %{buildroot}%{_includedir}
@@ -168,6 +173,7 @@ cp LICENSE.APLv2 %{buildroot}/%{_datadir}/license/%{name}-service
 cp LICENSE.APLv2 %{buildroot}/%{_datadir}/license/%{name}-test
 %endif
 
+cp service/things-manager/sdk/inc/*.h %{buildroot}%{_includedir}
 cp service/easy-setup/inc/*.h %{buildroot}%{_includedir}
 cp service/easy-setup/enrollee/inc/*.h %{buildroot}%{_includedir}
 
